@@ -21,8 +21,9 @@ jobs:
         run: |
           set -euo pipefail
           npm install --no-save qrcode@1.5.4 browserify
-          printf "window.QRCode = require('qrcode');\n" > /tmp/qr-entry.js
-          npx browserify /tmp/qr-entry.js -o assets/qrcode.min.js
+          printf "window.QRCode = require('qrcode');\n" > qr-entry.js
+          npx browserify qr-entry.js -o assets/qrcode.min.js
+          rm qr-entry.js
           test -s assets/qrcode.min.js
           python - <<'PY'
           from pathlib import Path
