@@ -11,46 +11,31 @@ const TOOL_KEYWORDS={
   'pdf/split':'プリンター',
   'pdf/delete-pages':'外付けSSD',
   'pdf/reorder':'スキャナー',
-  'text/character-count':'キーボード',
-  'text/dedupe-lines':'キーボード',
-  'text/remove-linebreaks':'キーボード',
-  'text/zenkaku-hankaku':'キーボード',
-  'text/sort-lines':'キーボード',
-  'text/word-count':'キーボード',
-  'text/case-convert':'キーボード',
-  'text/trim-whitespace':'キーボード',
-  'text/find-replace':'キーボード',
-  'text/add-line-numbers':'キーボード',
-  'text/reverse-lines':'キーボード',
   'text/random-picker':'マウス',
   'web/qr-code':'スマホスタンド',
-  'web/url-encode':'USBハブ',
-  'web/base64':'USBハブ',
-  'web/url-parser':'USBハブ',
-  'web/html-escape':'キーボード',
-  'web/query-string':'キーボード',
   'web/color-converter':'モニター',
-  'web/unix-timestamp':'キーボード',
   'web/password-generator':'セキュリティキー',
-  'web/utm-builder':'キーボード',
   'calculator/work-hours':'ワイヤレスマウス',
-  'calculator/discount':'電卓',
-  'calculator/profit-margin':'電卓',
-  'calculator/percentage':'電卓',
-  'calculator/consumption-tax':'電卓',
-  'calculator/percentage-change':'電卓',
-  'calculator/average':'電卓',
   'calculator/date-difference':'デスクカレンダー',
-  'calculator/age':'電卓',
   'calculator/time-add':'デジタル時計',
   'calculator/unit-length':'メジャー',
   'calculator/unit-weight':'デジタルスケール',
   'calculator/temperature':'温度計',
-  'developer/json-formatter':'キーボード',
-  'developer/uuid-generator':'キーボード',
-  'developer/hash-generator':'セキュリティキー',
-  'developer/regex-tester':'キーボード',
-  'developer/csv-json':'キーボード'
+  'calculator/bmi':'体重計',
+  'calculator/ideal-weight':'体重計',
+  'calculator/pace':'ランニングウォッチ',
+  'calculator/electricity-cost':'ワットチェッカー',
+  'calculator/fuel-economy':'車載スマホホルダー',
+  'developer/hash-generator':'セキュリティキー'
+};
+
+const CATEGORY_KEYWORDS={
+  image:'外付けSSD',
+  pdf:'スキャナー',
+  text:'キーボード',
+  web:'USBハブ',
+  calculator:'電卓',
+  developer:'キーボード'
 };
 
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'public, max-age=900',...headers}});
@@ -75,7 +60,8 @@ export async function onRequestGet({request,env}){
   }
   const u=new URL(request.url);
   const tool=(u.searchParams.get('tool')||'').replace(/^\/+|\/+$/g,'');
-  const keyword=TOOL_KEYWORDS[tool];
+  const category=tool.split('/')[0]||'';
+  const keyword=TOOL_KEYWORDS[tool]||CATEGORY_KEYWORDS[category];
   if(!keyword)return json({ok:false,error:'unknown_tool'},400,{'cache-control':'no-store'});
   const q=new URL(PRODUCT_API);
   q.searchParams.set('applicationId',env.RAKUTEN_APP_ID);
