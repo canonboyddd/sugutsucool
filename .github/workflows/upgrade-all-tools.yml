@@ -1,0 +1,98 @@
+name: Upgrade all SuguTsucool tools
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/upgrade-all-tools.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Generate dedicated SEO pages and enable shared upgrades
+        shell: python
+        run: |
+          from pathlib import Path
+          import json
+
+          tools = [
+            ('text','テキスト','word-count','単語・語句数カウント','文字数・行数・語句数・UTF-8バイト数をまとめて確認。'),
+            ('text','テキスト','case-convert','大文字・小文字変換','英字を大文字・小文字・タイトルケースへ一括変換。'),
+            ('text','テキスト','trim-whitespace','空白整理','行頭行末の空白、連続スペース、空行をまとめて整理。'),
+            ('text','テキスト','find-replace','検索・置換','文字列や正規表現を使って文章を一括検索・置換。'),
+            ('text','テキスト','add-line-numbers','行番号追加','複数行テキストへ好きな開始番号・区切りで行番号を追加。'),
+            ('text','テキスト','reverse-lines','行順反転','複数行テキストの上下順をワンクリックで反転。'),
+            ('text','テキスト','random-picker','ランダム抽選','候補を1行ずつ入力してランダムに抽選。複数当選にも対応。'),
+            ('web','Web','base64','Base64変換','日本語を含むテキストをBase64へエンコード・デコード。'),
+            ('web','Web','url-parser','URL分解','URLをプロトコル・ホスト・パス・クエリなどに分解。'),
+            ('web','Web','html-escape','HTMLエスケープ','HTML特殊文字を安全なエンティティへ変換・復元。'),
+            ('web','Web','query-string','クエリ文字列作成','キーと値からURLのクエリパラメータを自動生成。'),
+            ('web','Web','color-converter','カラーコード変換','HEX・RGB・HSLのカラーコードを相互確認。'),
+            ('web','Web','unix-timestamp','Unix時刻変換','日時とUnixタイムスタンプを相互変換。秒・ミリ秒に対応。'),
+            ('web','Web','password-generator','パスワード生成','文字種と長さを指定してブラウザ内でランダム生成。'),
+            ('web','Web','utm-builder','UTM URL作成','広告・SNS計測用のUTMパラメータ付きURLを作成。'),
+            ('calculator','計算','percentage','パーセント計算','「○の△%」「○は△の何%」などを簡単計算。'),
+            ('calculator','計算','consumption-tax','消費税計算','税抜・税込金額と消費税額を税率指定で計算。'),
+            ('calculator','計算','percentage-change','増減率計算','変更前と変更後の数値から増加率・減少率を計算。'),
+            ('calculator','計算','average','平均値計算','複数の数値から平均・合計・最小・最大を一括計算。'),
+            ('calculator','計算','date-difference','日数差計算','2つの日付の間が何日・何週間あるかを計算。'),
+            ('calculator','計算','age','年齢計算','生年月日と基準日から満年齢を計算。'),
+            ('calculator','計算','time-add','時刻加減算','時刻に分数を足したり引いたりして結果時刻を計算。'),
+            ('calculator','計算','unit-length','長さ換算','mm・cm・m・km・inch・ft・mileなどを相互換算。'),
+            ('calculator','計算','unit-weight','重さ換算','mg・g・kg・oz・lbを相互換算。'),
+            ('calculator','計算','temperature','温度換算','摂氏・華氏・ケルビンを相互換算。'),
+            ('developer','開発','json-formatter','JSON整形・検証','JSONを見やすく整形・圧縮し、構文エラーも確認。'),
+            ('developer','開発','uuid-generator','UUID生成','UUID v4をブラウザ内でまとめて生成。'),
+            ('developer','開発','hash-generator','ハッシュ生成','SHA-256・SHA-384・SHA-512のハッシュ値をブラウザ内で生成。'),
+            ('developer','開発','regex-tester','正規表現テスター','正規表現の一致箇所・件数をテスト。フラグ指定にも対応。'),
+            ('developer','開発','csv-json','CSV→JSON変換','CSVテキストをJSON配列へ変換。引用符付きセルにも対応。'),
+          ]
+
+          def page(cat, catjp, slug, title, desc):
+              url=f'https://sugutsucool.pages.dev/{cat}/{slug}/'
+              schema={"@context":"https://schema.org","@type":"WebApplication","name":title,"url":url,"description":desc,"applicationCategory":"UtilitiesApplication","operatingSystem":"Any","inLanguage":"ja-JP","isAccessibleForFree":True,"offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"},"publisher":{"@type":"Organization","name":"SuguTsucool","url":"https://sugutsucool.pages.dev/"}}
+              crumb={"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SuguTsucool","item":"https://sugutsucool.pages.dev/"},{"@type":"ListItem","position":2,"name":catjp,"item":f'https://sugutsucool.pages.dev/{cat}/'},{"@type":"ListItem","position":3,"name":title,"item":url}]}
+              return f'''<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}｜無料オンラインツール｜SuguTsucool</title><meta name="description" content="{desc} 登録不要・インストール不要で無料。ブラウザ内で処理します。"><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1"><link rel="canonical" href="{url}"><meta property="og:type" content="website"><meta property="og:site_name" content="SuguTsucool"><meta property="og:title" content="{title}｜SuguTsucool"><meta property="og:description" content="{desc}"><meta property="og:url" content="{url}"><meta name="twitter:card" content="summary"><link rel="icon" href="/assets/favicon.svg"><link rel="stylesheet" href="/assets/styles.css"><link rel="stylesheet" href="/assets/mega.css"><script type="application/ld+json">{json.dumps(schema,ensure_ascii=False,separators=(',',':'))}</script><script type="application/ld+json">{json.dumps(crumb,ensure_ascii=False,separators=(',',':'))}</script></head><body data-tool-suite="{slug}"><noscript><main class="tool-page"><div class="container"><h1>{title}</h1><p>{desc}</p><p>このツールを使用するにはJavaScriptを有効にしてください。</p></div></main></noscript><script src="/assets/tool-suite.js"></script><script src="/assets/tool-enhance.js"></script><script src="/assets/analytics-track.js"></script></body></html>'''
+
+          for cat,catjp,slug,title,desc in tools:
+              p=Path(cat)/slug/'index.html'
+              p.parent.mkdir(parents=True,exist_ok=True)
+              p.write_text(page(cat,catjp,slug,title,desc),encoding='utf-8')
+
+          # Upgrade all existing physical tool pages with the shared enhancement layer.
+          cats={'image','pdf','text','web','calculator','developer'}
+          for p in Path('.').glob('*/*/index.html'):
+              if p.parts[0] not in cats: continue
+              s=p.read_text(encoding='utf-8')
+              if '/assets/tool-enhance.js' not in s:
+                  marker='<script src="/assets/analytics-track.js"></script>'
+                  if marker in s:
+                      s=s.replace(marker,'<script src="/assets/tool-enhance.js"></script>'+marker)
+                  else:
+                      s=s.replace('</body>','<script src="/assets/tool-enhance.js"></script></body>')
+                  p.write_text(s,encoding='utf-8')
+
+          # Dedicated files now replace the old rewrite-based virtual pages.
+          r=Path('_redirects')
+          if r.exists():
+              r.write_text('# Dedicated static tool pages are generated for SEO and reliability.\n',encoding='utf-8')
+
+      - name: Commit upgraded tool pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add image pdf text web calculator developer _redirects
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "Upgrade all 50 tools with dedicated pages and shared UX"
+          git push
