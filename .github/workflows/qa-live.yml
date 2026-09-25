@@ -3,22 +3,16 @@ name: Live QA - all 50 SuguTsucool tools
 on:
   push:
     branches: [main]
-    paths:
-      - 'scripts/qa-live.mjs'
-      - '.github/workflows/qa-live.yml'
-      - 'assets/**'
-      - 'image/**'
-      - 'pdf/**'
-      - 'text/**'
-      - 'web/**'
-      - 'calculator/**'
-      - 'developer/**'
   schedule:
     - cron: '17 18 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   qa:
+    if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
