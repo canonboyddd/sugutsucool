@@ -41,18 +41,18 @@ const CATEGORY_KEYWORDS={
 
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'public, max-age=900',...headers}});
 const firstImage=item=>{
-  const a=item.mediumImageUrls||item.smallImageUrls||[];
+  const a=item.mediumImageUrls||item.smallImageUrls||item.MediumImageUrls||item.SmallImageUrls||[];
   const x=Array.isArray(a)?a[0]:null;
-  return typeof x==='string'?x:(x?.imageUrl||'');
+  return typeof x==='string'?x:(x?.imageUrl||x?.ImageUrl||'');
 };
 const normalize=item=>({
-  name:item.itemName||'',
-  price:Number(item.itemPrice||0),
+  name:item.itemName||item.ItemName||'',
+  price:Number(item.itemPrice??item.ItemPrice??0),
   image:firstImage(item),
-  url:item.affiliateUrl||item.itemUrl||'',
-  shop:item.shopName||'',
-  reviewAverage:Number(item.reviewAverage||0),
-  reviewCount:Number(item.reviewCount||0)
+  url:item.affiliateUrl||item.AffiliateUrl||item.itemUrl||item.ItemUrl||'',
+  shop:item.shopName||item.ShopName||'',
+  reviewAverage:Number(item.reviewAverage??item.ReviewAverage??0),
+  reviewCount:Number(item.reviewCount??item.ReviewCount??0)
 });
 
 export async function onRequestGet({request,env}){
@@ -72,7 +72,6 @@ export async function onRequestGet({request,env}){
   q.searchParams.set('formatVersion','2');
   q.searchParams.set('hits','4');
   q.searchParams.set('imageFlag','1');
-  q.searchParams.set('availability','1');
   q.searchParams.set('sort','-reviewCount');
   try{
     const r=await fetch(q,{headers:{
@@ -88,13 +87,13 @@ export async function onRequestGet({request,env}){
         ok:false,
         error:'rakuten_upstream',
         status:r.status,
-        upstreamError:upstream?.error||'',
-        upstreamDescription:upstream?.error_description||''
+        upstreamError:upstream?.error||upstream?.Error||'',
+        upstreamDescription:upstream?.error_description||upstream?.errorDescription||upstream?.ErrorDescription||''
       },502,{'cache-control':'no-store'});
     }
     const data=await r.json();
-    const raw=Array.isArray(data.items)?data.items:[];
-    const items=raw.map(x=>x?.Item||x).map(normalize).filter(x=>x.name&&x.url).slice(0,4);
+    const raw=Array.isArray(data.items)?data.items:Array.isArray(data.Items)?data.Items:[];
+    const items=raw.map(x=>x?.Item||x?.item||x).map(normalize).filter(x=>x.name&&x.url).slice(0,4);
     return json({ok:true,tool,keyword,items});
   }catch(e){
     return json({ok:false,error:'rakuten_fetch_failed'},502,{'cache-control':'no-store'});
