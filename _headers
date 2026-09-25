@@ -6,3 +6,6 @@
 
 /assets/*
   Cache-Control: public, max-age=604800
+
+/assets/site.js
+  Cache-Control: no-cache, must-revalidate
