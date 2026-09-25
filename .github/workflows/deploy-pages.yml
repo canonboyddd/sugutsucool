@@ -32,6 +32,10 @@ jobs:
             --exclude='qa-results' \
             ./ dist/
 
+      - name: Generate 60 additional tool pages
+        shell: bash
+        run: node scripts/generate-plus-tools.mjs
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
         with:
