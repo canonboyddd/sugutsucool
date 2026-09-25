@@ -14,7 +14,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Check Rakuten secret names across Cloudflare Pages
+      - name: Check Rakuten secret names and types across Cloudflare Pages
         shell: bash
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -26,34 +26,40 @@ jobs:
           projects_json="$(curl -fsS -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" "$api")"
           echo "$projects_json" | jq -e '.success == true' >/dev/null
 
-          echo "=== Cloudflare Pages projects / Rakuten secret-name check ==="
+          echo "=== Cloudflare Pages / Rakuten secret check ==="
           mapfile -t projects < <(echo "$projects_json" | jq -r '.result[].name' | sort)
-
-          if [ "${#projects[@]}" -eq 0 ]; then
-            echo "No Pages projects found."
-            exit 1
-          fi
-
-          overall=0
           required=(RAKUTEN_APP_ID RAKUTEN_ACCESS_KEY RAKUTEN_AFFILIATE_ID)
+          overall=0
 
           for project in "${projects[@]}"; do
             detail="$(curl -fsS -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" "$api/$project")"
             echo "$detail" | jq -e '.success == true' >/dev/null
-            mapfile -t keys < <(echo "$detail" | jq -r '(.result.deployment_configs.production.env_vars // {}) | keys[]')
+            project_ok=1
 
-            missing=()
             for key in "${required[@]}"; do
-              if ! printf '%s\n' "${keys[@]:-}" | grep -Fxq "$key"; then
-                missing+=("$key")
+              present="$(echo "$detail" | jq -r --arg key "$key" 'if (.result.deployment_configs.production.env_vars // {}) | has($key) then "yes" else "no" end')"
+              if [ "$present" != "yes" ]; then
+                echo "MISS $project : $key not configured"
+                project_ok=0
+                overall=1
+                continue
               fi
+
+              type="$(echo "$detail" | jq -r --arg key "$key" '.result.deployment_configs.production.env_vars[$key].type // "unknown"')"
+              case "$type" in
+                secret_text|secret)
+                  echo "OK   $project : $key ($type)"
+                  ;;
+                *)
+                  echo "WARN $project : $key exists but type=$type"
+                  project_ok=0
+                  overall=1
+                  ;;
+              esac
             done
 
-            if [ "${#missing[@]}" -eq 0 ]; then
-              echo "OK   $project : all 3 Rakuten secrets are configured"
-            else
-              echo "MISS $project : ${missing[*]}"
-              overall=1
+            if [ "$project_ok" -eq 1 ]; then
+              echo "PASS $project : all 3 Rakuten values are configured as secrets"
             fi
           done
 
