@@ -17,11 +17,13 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - name: Vendor qrcode browser build and remove CDN dependency
+      - name: Build local QR browser bundle and remove CDN dependency
         run: |
           set -euo pipefail
-          npm install --no-save qrcode@1.5.4
-          cp node_modules/qrcode/build/qrcode.min.js assets/qrcode.min.js
+          npm install --no-save qrcode@1.5.4 browserify
+          printf "window.QRCode = require('qrcode');\n" > /tmp/qr-entry.js
+          npx browserify /tmp/qr-entry.js -o assets/qrcode.min.js
+          test -s assets/qrcode.min.js
           python - <<'PY'
           from pathlib import Path
           p=Path('web/qr-code/index.html')
