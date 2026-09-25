@@ -1,4 +1,5 @@
 const PRODUCT_API='https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
+const SITE_ORIGIN='https://sugutsucool.pages.dev';
 
 const TOOL_KEYWORDS={
   'image/compress':'外付けSSD',
@@ -74,8 +75,23 @@ export async function onRequestGet({request,env}){
   q.searchParams.set('availability','1');
   q.searchParams.set('sort','-reviewCount');
   try{
-    const r=await fetch(q,{headers:{accessKey:env.RAKUTEN_ACCESS_KEY,'user-agent':'SuguTsucool/1.0'}});
-    if(!r.ok)return json({ok:false,error:'rakuten_upstream',status:r.status},502,{'cache-control':'no-store'});
+    const r=await fetch(q,{headers:{
+      accessKey:env.RAKUTEN_ACCESS_KEY,
+      origin:SITE_ORIGIN,
+      referer:`${SITE_ORIGIN}/`,
+      'user-agent':'SuguTsucool/1.0'
+    }});
+    if(!r.ok){
+      let upstream={};
+      try{upstream=await r.json()}catch{}
+      return json({
+        ok:false,
+        error:'rakuten_upstream',
+        status:r.status,
+        upstreamError:upstream?.error||'',
+        upstreamDescription:upstream?.error_description||''
+      },502,{'cache-control':'no-store'});
+    }
     const data=await r.json();
     const raw=Array.isArray(data.items)?data.items:[];
     const items=raw.map(x=>x?.Item||x).map(normalize).filter(x=>x.name&&x.url).slice(0,4);
