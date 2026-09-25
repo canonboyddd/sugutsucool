@@ -1,0 +1,38 @@
+name: Verify Rakuten affiliate API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'functions/api/rakuten.js'
+      - 'assets/affiliate-tools.js'
+      - 'assets/analytics-track.js'
+      - '.github/workflows/verify-rakuten.yml'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+      - name: Wait for production deployment
+        run: sleep 35
+      - name: Check Rakuten API response
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --retry 4 --retry-delay 5 \
+            'https://sugutsucool.pages.dev/api/rakuten?tool=image%2Fcompress' > /tmp/rakuten.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/rakuten.json',encoding='utf-8'))
+          assert d.get('ok') is True, d
+          items=d.get('items') or []
+          assert len(items)>=1, d
+          assert all(x.get('name') and x.get('url') for x in items), items
+          assert all('rakuten' in x.get('url','').lower() or 'r10.to' in x.get('url','').lower() for x in items), items
+          print('Rakuten API OK:',len(items),'items')
+          PY
+      - name: Check affiliate client is published
+        run: |
+          curl --fail --silent --show-error 'https://sugutsucool.pages.dev/assets/affiliate-tools.js' | grep -q 'data-affiliate'
