@@ -17,15 +17,31 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Wait for production deployment
-        run: sleep 35
+        run: sleep 60
+      - name: Fetch Rakuten API response
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p qa-results
+          status="$(curl --silent --show-error --retry 4 --retry-delay 5 --output qa-results/rakuten-response.json --write-out '%{http_code}' \
+            'https://sugutsucool.pages.dev/api/rakuten?tool=image%2Fcompress' || true)"
+          printf '%s\n' "$status" > qa-results/rakuten-status.txt
+          echo "HTTP $status"
+          cat qa-results/rakuten-response.json || true
+      - name: Upload Rakuten diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rakuten-verification-response
+          path: qa-results/
+          if-no-files-found: error
       - name: Check Rakuten API response
         run: |
           set -euo pipefail
-          curl --fail --silent --show-error --retry 4 --retry-delay 5 \
-            'https://sugutsucool.pages.dev/api/rakuten?tool=image%2Fcompress' > /tmp/rakuten.json
+          test "$(cat qa-results/rakuten-status.txt)" = "200"
           python - <<'PY'
           import json
-          d=json.load(open('/tmp/rakuten.json',encoding='utf-8'))
+          d=json.load(open('qa-results/rakuten-response.json',encoding='utf-8'))
           assert d.get('ok') is True, d
           items=d.get('items') or []
           assert len(items)>=1, d
