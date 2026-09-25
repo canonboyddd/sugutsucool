@@ -1,0 +1,61 @@
+name: Check Rakuten Cloudflare Secrets
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/check-rakuten-cloudflare.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check Rakuten secret names across Cloudflare Pages
+        shell: bash
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+
+          api="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects"
+          projects_json="$(curl -fsS -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" "$api")"
+          echo "$projects_json" | jq -e '.success == true' >/dev/null
+
+          echo "=== Cloudflare Pages projects / Rakuten secret-name check ==="
+          mapfile -t projects < <(echo "$projects_json" | jq -r '.result[].name' | sort)
+
+          if [ "${#projects[@]}" -eq 0 ]; then
+            echo "No Pages projects found."
+            exit 1
+          fi
+
+          overall=0
+          required=(RAKUTEN_APP_ID RAKUTEN_ACCESS_KEY RAKUTEN_AFFILIATE_ID)
+
+          for project in "${projects[@]}"; do
+            detail="$(curl -fsS -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" "$api/$project")"
+            echo "$detail" | jq -e '.success == true' >/dev/null
+            mapfile -t keys < <(echo "$detail" | jq -r '(.result.deployment_configs.production.env_vars // {}) | keys[]')
+
+            missing=()
+            for key in "${required[@]}"; do
+              if ! printf '%s\n' "${keys[@]:-}" | grep -Fxq "$key"; then
+                missing+=("$key")
+              fi
+            done
+
+            if [ "${#missing[@]}" -eq 0 ]; then
+              echo "OK   $project : all 3 Rakuten secrets are configured"
+            else
+              echo "MISS $project : ${missing[*]}"
+              overall=1
+            fi
+          done
+
+          echo "=== End check ==="
+          exit "$overall"
