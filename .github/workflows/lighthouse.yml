@@ -1,0 +1,51 @@
+name: Lighthouse performance audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'assets/**'
+      - '.github/workflows/lighthouse.yml'
+  schedule:
+    - cron: '43 18 * * 1'
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Install Lighthouse
+        run: npm install --no-save lighthouse
+      - name: Wait for production deployment on push
+        if: github.event_name == 'push'
+        run: sleep 35
+      - name: Audit representative pages
+        run: |
+          mkdir -p lighthouse-results
+          npx lighthouse 'https://sugutsucool.pages.dev/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/home.json --quiet
+          npx lighthouse 'https://sugutsucool.pages.dev/image/compress/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/image.json --quiet
+          npx lighthouse 'https://sugutsucool.pages.dev/developer/json-formatter/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/developer.json --quiet
+      - name: Enforce baseline quality
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          for(const f of ['home','image','developer']){
+            const j=JSON.parse(fs.readFileSync(`lighthouse-results/${f}.json`));
+            const c=j.categories;
+            const s={performance:c.performance.score,accessibility:c.accessibility.score,best:c['best-practices'].score,seo:c.seo.score};
+            console.log(f,s);
+            if(s.performance<0.70||s.accessibility<0.85||s.best<0.85||s.seo<0.90) process.exitCode=1;
+          }
+          NODE
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-results
+          path: lighthouse-results/
