@@ -1,0 +1,44 @@
+name: Live QA - all 50 SuguTsucool tools
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/qa-live.mjs'
+      - '.github/workflows/qa-live.yml'
+      - 'assets/**'
+      - 'image/**'
+      - 'pdf/**'
+      - 'text/**'
+      - 'web/**'
+      - 'calculator/**'
+      - 'developer/**'
+  workflow_dispatch:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Install browser QA dependencies
+        run: |
+          npm init -y
+          npm install --no-save playwright pdf-lib pngjs
+          npx playwright install --with-deps chromium
+      - name: Wait for Cloudflare deployment
+        run: sleep 40
+      - name: Run live browser QA
+        env:
+          QA_BASE_URL: https://sugutsucool.pages.dev
+        run: node scripts/qa-live.mjs
+      - name: Upload QA result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-live-results
+          path: qa-results/
+          if-no-files-found: ignore
