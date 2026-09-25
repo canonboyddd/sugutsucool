@@ -1,4 +1,4 @@
-name: Check Rakuten Cloudflare Secrets
+name: Check SuguTsucool Rakuten Cloudflare Secrets
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - '.github/workflows/check-rakuten-cloudflare.yml'
+      - 'functions/api/rakuten.js'
+      - 'assets/affiliate-tools.js'
   workflow_dispatch:
 
 jobs:
@@ -14,7 +16,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Check Rakuten secret names and types across Cloudflare Pages
+      - name: Check SuguTsucool Rakuten secret names and types
         shell: bash
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -22,46 +24,37 @@ jobs:
         run: |
           set -euo pipefail
 
-          api="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects"
-          projects_json="$(curl -fsS -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" "$api")"
-          echo "$projects_json" | jq -e '.success == true' >/dev/null
+          project='sugutsucool'
+          api="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/${project}"
+          detail="$(curl -fsS -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" "$api")"
+          echo "$detail" | jq -e '.success == true' >/dev/null
 
-          echo "=== Cloudflare Pages / Rakuten secret check ==="
-          mapfile -t projects < <(echo "$projects_json" | jq -r '.result[].name' | sort)
+          echo "=== SuguTsucool / Rakuten secret check ==="
           required=(RAKUTEN_APP_ID RAKUTEN_ACCESS_KEY RAKUTEN_AFFILIATE_ID)
           overall=0
 
-          for project in "${projects[@]}"; do
-            detail="$(curl -fsS -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" "$api/$project")"
-            echo "$detail" | jq -e '.success == true' >/dev/null
-            project_ok=1
-
-            for key in "${required[@]}"; do
-              present="$(echo "$detail" | jq -r --arg key "$key" 'if (.result.deployment_configs.production.env_vars // {}) | has($key) then "yes" else "no" end')"
-              if [ "$present" != "yes" ]; then
-                echo "MISS $project : $key not configured"
-                project_ok=0
-                overall=1
-                continue
-              fi
-
-              type="$(echo "$detail" | jq -r --arg key "$key" '.result.deployment_configs.production.env_vars[$key].type // "unknown"')"
-              case "$type" in
-                secret_text|secret)
-                  echo "OK   $project : $key ($type)"
-                  ;;
-                *)
-                  echo "WARN $project : $key exists but type=$type"
-                  project_ok=0
-                  overall=1
-                  ;;
-              esac
-            done
-
-            if [ "$project_ok" -eq 1 ]; then
-              echo "PASS $project : all 3 Rakuten values are configured as secrets"
+          for key in "${required[@]}"; do
+            present="$(echo "$detail" | jq -r --arg key "$key" 'if (.result.deployment_configs.production.env_vars // {}) | has($key) then "yes" else "no" end')"
+            if [ "$present" != "yes" ]; then
+              echo "MISS $project : $key not configured"
+              overall=1
+              continue
             fi
+
+            type="$(echo "$detail" | jq -r --arg key "$key" '.result.deployment_configs.production.env_vars[$key].type // "unknown"')"
+            case "$type" in
+              secret_text|secret)
+                echo "OK   $project : $key ($type)"
+                ;;
+              *)
+                echo "WARN $project : $key exists but type=$type"
+                overall=1
+                ;;
+            esac
           done
 
+          if [ "$overall" -eq 0 ]; then
+            echo "PASS $project : all 3 Rakuten values are configured as production secrets"
+          fi
           echo "=== End check ==="
           exit "$overall"
