@@ -13,6 +13,8 @@ on:
       - 'web/**'
       - 'calculator/**'
       - 'developer/**'
+  schedule:
+    - cron: '17 18 * * *'
   workflow_dispatch:
 
 jobs:
@@ -29,7 +31,8 @@ jobs:
           npm init -y
           npm install --no-save playwright pdf-lib pngjs
           npx playwright install --with-deps chromium
-      - name: Wait for Cloudflare deployment
+      - name: Wait for Cloudflare deployment on push
+        if: github.event_name == 'push'
         run: sleep 40
       - name: Run live browser QA
         env:
