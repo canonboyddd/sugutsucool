@@ -1,0 +1,39 @@
+name: Verify SuguTsucool Mega Update
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/verify-mega-update.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify production pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://sugutsucool.pages.dev"
+          echo "Waiting for edge propagation..."
+          sleep 5
+          check() {
+            url="$1"
+            code="$(curl -L -sS -o /tmp/page -w '%{http_code}' "$url")"
+            echo "$code  $url"
+            test "$code" = "200"
+          }
+          check "$base/"
+          grep -q '50種類' /tmp/page
+          check "$base/developer/"
+          grep -q '開発ツール' /tmp/page
+          check "$base/developer/json-formatter/"
+          grep -q 'tool-suite.js' /tmp/page
+          check "$base/web/password-generator/"
+          grep -q 'tool-suite.js' /tmp/page
+          check "$base/calculator/percentage/"
+          grep -q 'tool-suite.js' /tmp/page
+          check "$base/sitemap.xml"
+          grep -q '/developer/json-formatter/' /tmp/page
+          grep -q '/web/password-generator/' /tmp/page
+          echo 'PASS: mega update production checks completed'
