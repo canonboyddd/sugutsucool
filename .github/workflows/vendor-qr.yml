@@ -1,0 +1,38 @@
+name: Vendor QR library locally
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/vendor-qr.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Vendor qrcode browser build and remove CDN dependency
+        run: |
+          set -euo pipefail
+          npm install --no-save qrcode@1.5.4
+          cp node_modules/qrcode/build/qrcode.min.js assets/qrcode.min.js
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('web/qr-code/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js','/assets/qrcode.min.js')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit QR reliability fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/qrcode.min.js web/qr-code/index.html
+          git commit -m "Fix QR generator with local QR library"
+          git push
