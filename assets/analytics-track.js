@@ -21,7 +21,28 @@
   function source(){try{if(!document.referrer)return 'direct';const u=new URL(document.referrer);if(u.hostname===location.hostname)return 'internal';if(/google\./i.test(u.hostname))return 'google';if(/bing\.com/i.test(u.hostname))return 'bing';if(/yahoo\./i.test(u.hostname))return 'yahoo';if(/x\.com|twitter\.com/i.test(u.hostname))return 'x';if(/instagram\.com/i.test(u.hostname))return 'instagram';if(/facebook\.com/i.test(u.hostname))return 'facebook';return u.hostname.replace(/^www\./,'')}catch(e){return 'other'}}
   function payload(eventType,extra){return {event_type:eventType,path:location.pathname,tool:toolName(),visitor_id:visitor,session_id:session,referrer:document.referrer||'',source:source(),device:device(),title:document.title,extra:{tool_path:toolPath(),...(extra||{})}}}
   function post(body,useBeacon){const url=api+'/collect',json=JSON.stringify(body);if(useBeacon&&navigator.sendBeacon){try{const ok=navigator.sendBeacon(url,new Blob([json],{type:'text/plain;charset=UTF-8'}));if(ok)return Promise.resolve(true)}catch(e){}}return fetch(url,{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:json,keepalive:true,mode:'cors',credentials:'omit'}).then(r=>{if(!r.ok)throw new Error('analytics HTTP '+r.status);return true}).catch(err=>{try{console.warn('[SuguTsucool Analytics]',err.message||err)}catch(e){}return false})}
-  function send(eventType,extra,opts){return post(payload(eventType,extra),!!(opts&&opts.beacon))}
+  function central(eventType,extra){
+    if(eventType!=='page_view'&&eventType!=='affiliate_click')return;
+    try{
+      const q=new URLSearchParams({
+        site_key:'sugutsucool',
+        event_name:eventType,
+        browser_id:visitor,
+        session_id:session,
+        page_path:location.pathname,
+        page_title:document.title,
+        referrer:document.referrer||'',
+        device_type:device(),
+        program:eventType==='affiliate_click'?String(extra?.network||''):'',
+        placement:eventType==='affiliate_click'?String(extra?.label||'').slice(0,160):''
+      });
+      const img=new Image(1,1);
+      (window.__suguCentralPixels||(window.__suguCentralPixels=[])).push(img);
+      img.onload=img.onerror=()=>{const a=window.__suguCentralPixels||[];const i=a.indexOf(img);if(i>=0)a.splice(i,1)};
+      img.src='https://factory-career-site.pages.dev/api/central/collect?'+q.toString();
+    }catch(e){}
+  }
+  function send(eventType,extra,opts){central(eventType,extra||{});return post(payload(eventType,extra),!!(opts&&opts.beacon))}
   window.SuguTsucoolAnalytics={track:send,test(){return send('page_view',{test:true})},optOut(){localStorage.setItem(OPT_OUT_KEY,'1')},optIn(){localStorage.removeItem(OPT_OUT_KEY)}};
 
   const pageView=()=>send('page_view');
@@ -46,6 +67,5 @@
   window.addEventListener('error',e=>send('client_error',{kind:'error',message:String(e.message||'error').slice(0,180)}));
   window.addEventListener('unhandledrejection',e=>send('client_error',{kind:'promise',message:String(e.reason?.message||e.reason||'unhandled rejection').slice(0,180)}));
 
-  // Contextual monetization is loaded only on an individual tool page.
   if(toolPath()&&!document.querySelector('script[data-sugu-affiliate]')){const s=document.createElement('script');s.src='/assets/affiliate-tools.js';s.defer=true;s.dataset.suguAffiliate='1';document.body.appendChild(s)}
 })();
