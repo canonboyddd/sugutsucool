@@ -1,4 +1,4 @@
-name: Live QA - all 110 SuguTsucool tools
+name: Live QA - all 150 SuguTsucool tools
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
   qa:
     if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
@@ -28,14 +28,18 @@ jobs:
       - name: Wait for Cloudflare deployment on push
         if: github.event_name == 'push'
         run: sleep 45
-      - name: Run live browser QA
+      - name: Run live browser QA for existing 110 tools
         env:
           QA_BASE_URL: https://sugutsucool.pages.dev
         run: node scripts/qa-live.mjs
+      - name: Run live browser QA for 40 expansion tools
+        env:
+          QA_BASE_URL: https://sugutsucool.pages.dev
+        run: node scripts/qa-extra-40.mjs
       - name: Upload QA result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: qa-live-results
+          name: qa-live-results-150
           path: qa-results/
           if-no-files-found: ignore
