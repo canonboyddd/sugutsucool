@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /admin-analytics/
+Disallow: /admin-seo/
 Sitemap: https://sugutsucool.pages.dev/sitemap.xml
