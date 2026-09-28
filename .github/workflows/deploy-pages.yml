@@ -40,15 +40,25 @@ jobs:
         shell: bash
         run: node scripts/apply-priority-seo.mjs
 
-      - name: Verify priority SEO build
+      - name: Add long-tail search intent SEO
+        shell: bash
+        run: node scripts/apply-longtail-seo.mjs
+
+      - name: Verify priority and long-tail SEO build
         shell: bash
         run: |
           set -euo pipefail
           test "$(grep -Rsl 'data-priority-seo="1"' dist/image dist/pdf dist/text dist/web dist/calculator dist/developer | wc -l)" -eq 30
+          test "$(grep -Rsl 'data-longtail-seo="1"' dist/image dist/pdf dist/text dist/web dist/calculator dist/developer | wc -l)" -eq 30
           grep -q 'id="priorityTools"' dist/index.html
           grep -q '150種類' dist/index.html
           grep -q '公開中 150ツール' dist/index.html
-          echo 'Priority SEO verification passed: 30 pages + homepage'
+          grep -q '画像圧縮 オンライン' dist/image/compress/index.html
+          grep -q 'PDF 結合 オンライン' dist/pdf/merge/index.html
+          grep -q '文字数 カウント 空白除く' dist/text/character-count/index.html
+          grep -q 'QRコード PNG ダウンロード' dist/web/qr-code/index.html
+          grep -q 'JSON formatter 無料' dist/developer/json-formatter/index.html
+          echo 'SEO verification passed: 30 priority pages + 30 long-tail guides + homepage'
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
