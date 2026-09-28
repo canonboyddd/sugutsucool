@@ -13,3 +13,30 @@ try{const key='sugutsucool_tool_usage',p=location.pathname,raw=JSON.parse(localS
 };if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready);else queueMicrotask(ready)})();
 (()=>{const load=()=>{if(document.querySelector('script[src="/assets/tool-pro.js"]'))return;const s=document.createElement('script');s.src='/assets/tool-pro.js';document.body.appendChild(s)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load);else setTimeout(load,0)})();
 (()=>{const load=()=>['/assets/seo-runtime.js','/assets/affiliate-tools.js'].forEach(src=>{if(document.querySelector(`script[src="${src}"]`))return;const s=document.createElement('script');s.src=src;s.defer=true;document.body.appendChild(s)});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load);else setTimeout(load,0)})();
+
+// SEO: turn the visible FAQ into machine-readable FAQPage data and add intent-matched internal links.
+(()=>{const run=()=>{
+  try{
+    const faq=document.querySelector('.faq');
+    if(faq&&!document.querySelector('script[data-seo="faqpage"]')){
+      const main=[...faq.querySelectorAll('details')].map(d=>({q:(d.querySelector('summary')?.textContent||'').trim(),a:(d.querySelector('p')?.textContent||'').trim()})).filter(x=>x.q&&x.a);
+      if(main.length){const s=document.createElement('script');s.type='application/ld+json';s.dataset.seo='faqpage';s.textContent=JSON.stringify({'@context':'https://schema.org','@type':'FAQPage',mainEntity:main.map(x=>({'@type':'Question',name:x.q,acceptedAnswer:{'@type':'Answer',text:x.a}}))});document.head.appendChild(s)}
+    }
+    const extras={
+      '/calculator/work-hours/':[
+        ['/calculator/hourly-wage/','時給計算','勤務時間から時給・給与の確認へ'],
+        ['/calculator/overtime-pay/','残業代計算','残業時間と割増賃金の確認へ'],
+        ['/calculator/time-add/','時刻加減算','勤務・休憩時刻の足し引きへ']
+      ],
+      '/web/qr-code/':[
+        ['/web/url-encode/','URLエンコード','日本語を含むURLの変換へ'],
+        ['/web/base64/','Base64変換','文字列やデータのエンコードへ'],
+        ['/web/data-url-text/','Data URL生成','テキストをData URLに変換']
+      ]
+    }[location.pathname];
+    if(extras&& !document.querySelector('.seo-intent-links')){
+      const related=document.querySelector('.related');if(!related)return;
+      const section=document.createElement('section');section.className='howto seo-intent-links';section.innerHTML=`<h2>次によく使われる関連ツール</h2><div class="related-grid">${extras.map(([href,title,desc])=>`<a class="tool-card" href="${href}"><h3>${title}</h3><p>${desc}</p></a>`).join('')}</div>`;related.insertAdjacentElement('afterend',section);
+    }
+  }catch(e){}
+};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
