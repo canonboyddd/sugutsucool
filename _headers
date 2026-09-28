@@ -3,9 +3,19 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   X-Frame-Options: DENY
+  Cache-Control: no-cache, must-revalidate
 
 /assets/*
-  Cache-Control: public, max-age=604800
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
-/assets/site.js
-  Cache-Control: no-cache, must-revalidate
+/assets/qrcode.min.js
+  Cache-Control: public, max-age=2592000, immutable
+
+/assets/favicon.svg
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+/sitemap.xml
+  Cache-Control: public, max-age=300, must-revalidate
+
+/robots.txt
+  Cache-Control: public, max-age=300, must-revalidate
