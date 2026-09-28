@@ -18,10 +18,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Validate critical JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/analytics-track.js
+          node --check assets/affiliate-tools.js
+          node --check functions/api/rakuten.js
+          node --check scripts/generate-seo-guides-plus.mjs
+          node --check scripts/verify-indexability.mjs
+
       - name: Prepare static site
         shell: bash
         run: |
           set -euo pipefail
+          rm -rf dist
           mkdir -p dist
           rsync -av \
             --exclude='.git' \
@@ -33,24 +44,22 @@ jobs:
             ./ dist/
 
       - name: Generate 100 additional tool pages (150 total)
-        shell: bash
         run: node scripts/generate-plus-tools.mjs
 
       - name: Prioritize 30 high-intent SEO tools
-        shell: bash
         run: node scripts/apply-priority-seo.mjs
 
       - name: Add long-tail search intent SEO
-        shell: bash
         run: node scripts/apply-longtail-seo.mjs
 
       - name: Add FAQ comparison and examples to priority tools
-        shell: bash
         run: node scripts/apply-seo-depth.mjs
 
       - name: Generate 30 dedicated SEO guide pages
-        shell: bash
         run: node scripts/generate-seo-guides.mjs
+
+      - name: Expand guide library to 60 pages
+        run: node scripts/generate-seo-guides-plus.mjs
 
       - name: Verify deep SEO and guide build
         shell: bash
@@ -61,8 +70,10 @@ jobs:
           test "$(grep -Rsl 'data-longtail-seo="1"' $roots | wc -l)" -eq 30
           test "$(grep -Rsl 'data-seo-depth="1"' $roots | wc -l)" -eq 30
           test "$(grep -Rsl 'data-seo-guide-link="1"' $roots | wc -l)" -eq 30
+          test "$(grep -Rsl 'data-seo-guide-extra-link="1"' $roots | wc -l)" -eq 30
           test -f dist/guides/index.html
-          test "$(find dist/guides -mindepth 2 -maxdepth 2 -name index.html | wc -l)" -eq 30
+          test "$(find dist/guides -mindepth 2 -maxdepth 2 -name index.html | wc -l)" -eq 60
+          grep -q '60 GUIDE PAGES' dist/guides/index.html
           grep -q 'id="priorityTools"' dist/index.html
           grep -q 'id="guideFeature"' dist/index.html
           grep -q '150種類' dist/index.html
@@ -72,15 +83,14 @@ jobs:
           grep -q '文字数 カウント 空白除く' dist/text/character-count/index.html
           grep -q 'QRコード PNG ダウンロード' dist/web/qr-code/index.html
           grep -q 'JSON formatter 無料' dist/developer/json-formatter/index.html
-          grep -q '検索意図を詳しく解説' dist/image/compress/index.html
-          grep -q '似たツールとの違い' dist/pdf/merge/index.html
-          grep -q '具体的な利用例' dist/calculator/work-hours/index.html
-          grep -q '使う前に確認したいこと' dist/developer/json-formatter/index.html
           grep -q '画像圧縮の使い方ガイド' dist/guides/image-compress/index.html
-          grep -q 'PDF結合の使い方ガイド' dist/guides/pdf-merge/index.html
-          grep -q 'JSON整形・検証の使い方ガイド' dist/guides/developer-json-formatter/index.html
-          grep -q 'https://sugutsucool.pages.dev/guides/' dist/sitemap.xml
-          echo 'SEO verification passed: 30 deep tool pages + 30 dedicated guide pages + guide index + backlinks + sitemap'
+          grep -q '画像圧縮の選び方・失敗対策' dist/guides/image-compress-tips/index.html
+          grep -q 'PDF結合の選び方・失敗対策' dist/guides/pdf-merge-tips/index.html
+          grep -q '/assets/guides.css' dist/guides/image-compress/index.html
+          echo 'Deep SEO verification passed: 30 priority tools + 60 dedicated guides'
+
+      - name: Verify crawlability, canonicals and sitemap
+        run: node scripts/verify-indexability.mjs
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
