@@ -7,6 +7,7 @@ on:
       - 'index.html'
       - 'assets/**'
       - 'scripts/generate-seo-guides*.mjs'
+      - 'scripts/generate-question-guides.mjs'
       - '_headers'
       - '.github/workflows/lighthouse.yml'
   schedule:
@@ -16,7 +17,7 @@ on:
 jobs:
   lighthouse:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 24
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
@@ -34,11 +35,12 @@ jobs:
           npx lighthouse 'https://sugutsucool.pages.dev/image/compress/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/image.json --quiet
           npx lighthouse 'https://sugutsucool.pages.dev/developer/json-formatter/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/developer.json --quiet
           npx lighthouse 'https://sugutsucool.pages.dev/guides/image-compress/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/guide.json --quiet
+          npx lighthouse 'https://sugutsucool.pages.dev/guides/image-under-1mb/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/question-guide.json --quiet
       - name: Enforce performance and SEO baseline
         run: |
           node - <<'NODE'
           const fs=require('fs');
-          for(const f of ['home','image','developer','guide']){
+          for(const f of ['home','image','developer','guide','question-guide']){
             const j=JSON.parse(fs.readFileSync(`lighthouse-results/${f}.json`));
             const c=j.categories,a=j.audits;
             const s={performance:c.performance.score,accessibility:c.accessibility.score,best:c['best-practices'].score,seo:c.seo.score,lcp:a['largest-contentful-paint']?.numericValue||0,cls:a['cumulative-layout-shift']?.numericValue||0,tbt:a['total-blocking-time']?.numericValue||0};
