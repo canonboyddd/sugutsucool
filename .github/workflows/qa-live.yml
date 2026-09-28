@@ -1,4 +1,4 @@
-name: Live QA - all 150 SuguTsucool tools
+name: Live QA - all 150 SuguTsucool tools + 60 guides
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
   qa:
     if: ${{ github.actor != 'github-actions[bot]' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 65
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v5
@@ -27,7 +27,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Wait for Cloudflare deployment on push
         if: github.event_name == 'push'
-        run: sleep 45
+        run: sleep 50
       - name: Run live browser QA for existing 110 tools
         env:
           QA_BASE_URL: https://sugutsucool.pages.dev
@@ -36,10 +36,14 @@ jobs:
         env:
           QA_BASE_URL: https://sugutsucool.pages.dev
         run: node scripts/qa-extra-40.mjs
+      - name: Run live QA for 60 SEO guides
+        env:
+          QA_BASE_URL: https://sugutsucool.pages.dev
+        run: node scripts/qa-guides.mjs
       - name: Upload QA result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: qa-live-results-150
+          name: qa-live-results-150-tools-60-guides
           path: qa-results/
           if-no-files-found: ignore
