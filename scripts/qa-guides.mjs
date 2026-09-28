@@ -5,7 +5,7 @@ const BASE=(process.env.QA_BASE_URL||'https://sugutsucool.pages.dev').replace(/\
 const xml=await fetch(BASE+'/sitemap.xml').then(r=>{if(!r.ok)throw new Error('sitemap HTTP '+r.status);return r.text()});
 const urls=[...xml.matchAll(/<loc>(https?:\/\/[^<]+\/guides\/[^<]*)<\/loc>/g)].map(m=>m[1]);
 const detail=urls.filter(u=>new URL(u).pathname!=='/guides/');
-if(detail.length<60)throw new Error(`expected at least 60 guide detail URLs, found ${detail.length}`);
+if(detail.length<100)throw new Error(`expected at least 100 guide detail URLs, found ${detail.length}`);
 
 const browser=await chromium.launch({headless:true});
 const results=[];let failed=0;
@@ -19,6 +19,6 @@ async function check(url,viewport,label){
  }catch(e){failed++;results.push({url,label,ok:false,error:String(e.message||e)})}finally{await page.close()}
 }
 for(const u of detail)await check(u,{width:1366,height:900},'desktop');
-for(const u of detail.filter((_,i)=>i%6===0))await check(u,{width:390,height:844},'mobile');
+for(const u of detail.filter((_,i)=>i%8===0))await check(u,{width:390,height:844},'mobile');
 await browser.close();await fs.mkdir('qa-results',{recursive:true});await fs.writeFile('qa-results/guides.json',JSON.stringify({base:BASE,total:detail.length,checks:results.length,failed,results},null,2));
 console.log(`Guide QA: ${detail.length} guides, ${results.length} checks, ${failed} failed`);if(failed)process.exit(1);
