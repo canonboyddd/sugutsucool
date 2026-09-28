@@ -48,7 +48,11 @@ jobs:
         shell: bash
         run: node scripts/apply-seo-depth.mjs
 
-      - name: Verify deep SEO build
+      - name: Generate 30 dedicated SEO guide pages
+        shell: bash
+        run: node scripts/generate-seo-guides.mjs
+
+      - name: Verify deep SEO and guide build
         shell: bash
         run: |
           set -euo pipefail
@@ -56,7 +60,11 @@ jobs:
           test "$(grep -Rsl 'data-priority-seo="1"' $roots | wc -l)" -eq 30
           test "$(grep -Rsl 'data-longtail-seo="1"' $roots | wc -l)" -eq 30
           test "$(grep -Rsl 'data-seo-depth="1"' $roots | wc -l)" -eq 30
+          test "$(grep -Rsl 'data-seo-guide-link="1"' $roots | wc -l)" -eq 30
+          test -f dist/guides/index.html
+          test "$(find dist/guides -mindepth 2 -maxdepth 2 -name index.html | wc -l)" -eq 30
           grep -q 'id="priorityTools"' dist/index.html
+          grep -q 'id="guideFeature"' dist/index.html
           grep -q '150種類' dist/index.html
           grep -q '公開中 150ツール' dist/index.html
           grep -q '画像圧縮 オンライン' dist/image/compress/index.html
@@ -68,7 +76,11 @@ jobs:
           grep -q '似たツールとの違い' dist/pdf/merge/index.html
           grep -q '具体的な利用例' dist/calculator/work-hours/index.html
           grep -q '使う前に確認したいこと' dist/developer/json-formatter/index.html
-          echo 'Deep SEO verification passed: 30 priority + 30 long-tail + 30 FAQ/comparison/example sections'
+          grep -q '画像圧縮の使い方ガイド' dist/guides/image-compress/index.html
+          grep -q 'PDF結合の使い方ガイド' dist/guides/pdf-merge/index.html
+          grep -q 'JSON整形・検証の使い方ガイド' dist/guides/developer-json-formatter/index.html
+          grep -q 'https://sugutsucool.pages.dev/guides/' dist/sitemap.xml
+          echo 'SEO verification passed: 30 deep tool pages + 30 dedicated guide pages + guide index + backlinks + sitemap'
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
