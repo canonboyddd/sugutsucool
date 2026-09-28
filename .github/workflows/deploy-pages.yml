@@ -24,8 +24,10 @@ jobs:
           set -euo pipefail
           node --check assets/analytics-track.js
           node --check assets/affiliate-tools.js
+          node --check assets/tool-pro.js
           node --check functions/api/rakuten.js
           node --check scripts/generate-seo-guides-plus.mjs
+          node --check scripts/generate-question-guides.mjs
           node --check scripts/verify-indexability.mjs
 
       - name: Prepare static site
@@ -61,6 +63,9 @@ jobs:
       - name: Expand guide library to 60 pages
         run: node scripts/generate-seo-guides-plus.mjs
 
+      - name: Expand guide library to 100 question-focused pages
+        run: node scripts/generate-question-guides.mjs
+
       - name: Verify deep SEO and guide build
         shell: bash
         run: |
@@ -71,9 +76,10 @@ jobs:
           test "$(grep -Rsl 'data-seo-depth="1"' $roots | wc -l)" -eq 30
           test "$(grep -Rsl 'data-seo-guide-link="1"' $roots | wc -l)" -eq 30
           test "$(grep -Rsl 'data-seo-guide-extra-link="1"' $roots | wc -l)" -eq 30
+          test "$(grep -Rsl 'data-question-guide-links="1"' $roots | wc -l)" -eq 20
           test -f dist/guides/index.html
-          test "$(find dist/guides -mindepth 2 -maxdepth 2 -name index.html | wc -l)" -eq 60
-          grep -q '60 GUIDE PAGES' dist/guides/index.html
+          test "$(find dist/guides -mindepth 2 -maxdepth 2 -name index.html | wc -l)" -eq 100
+          grep -q '100 GUIDE PAGES' dist/guides/index.html
           grep -q 'id="priorityTools"' dist/index.html
           grep -q 'id="guideFeature"' dist/index.html
           grep -q '150種類' dist/index.html
@@ -86,8 +92,12 @@ jobs:
           grep -q '画像圧縮の使い方ガイド' dist/guides/image-compress/index.html
           grep -q '画像圧縮の選び方・失敗対策' dist/guides/image-compress-tips/index.html
           grep -q 'PDF結合の選び方・失敗対策' dist/guides/pdf-merge-tips/index.html
+          grep -q '画像を1MB以下にする方法' dist/guides/image-under-1mb/index.html
+          grep -q 'PDFを1つにまとめる方法' dist/guides/merge-pdf-into-one/index.html
+          grep -q '勤務時間から休憩時間を引く方法' dist/guides/work-hours-minus-break/index.html
+          grep -q 'JSONエラーを見つけて整形する方法' dist/guides/find-json-error/index.html
           grep -q '/assets/guides.css' dist/guides/image-compress/index.html
-          echo 'Deep SEO verification passed: 30 priority tools + 60 dedicated guides'
+          echo 'Deep SEO verification passed: 30 priority tools + 100 dedicated guides'
 
       - name: Verify crawlability, canonicals and sitemap
         run: node scripts/verify-indexability.mjs
