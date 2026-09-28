@@ -35,8 +35,6 @@ export const EXPANSION_TOOLS = [
   ['calculator','計算','べき乗計算','calculator/power','xʸ','底と指数からべき乗を計算します。'],
   ['calculator','計算','標準偏差計算','calculator/standard-deviation','σ','複数の数値から平均・分散・標準偏差を計算します。'],
   ['calculator','計算','角度換算','calculator/unit-angle','°','度・ラジアンを相互換算します。'],
-  ['calculator','計算','圧力換算','calculator/unit-pressure','Pa','Pa・kPa・MPa・bar・psi・atmを相互換算します。'],
-  ['calculator','計算','エネルギー換算','calculator/unit-energy','J','J・kJ・Wh・kWh・kcalを相互換算します。'],
 
   ['developer','開発','JSON文字列エスケープ','developer/json-string-escape','\\"','文字列をJSON文字列として安全に使える形へエスケープします。'],
   ['developer','開発','JSON文字列アンエスケープ','developer/json-string-unescape','↪️','JSON形式でエスケープされた文字列を元に戻します。'],
