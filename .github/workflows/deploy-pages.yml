@@ -44,12 +44,18 @@ jobs:
         shell: bash
         run: node scripts/apply-longtail-seo.mjs
 
-      - name: Verify priority and long-tail SEO build
+      - name: Add FAQ comparison and examples to priority tools
+        shell: bash
+        run: node scripts/apply-seo-depth.mjs
+
+      - name: Verify deep SEO build
         shell: bash
         run: |
           set -euo pipefail
-          test "$(grep -Rsl 'data-priority-seo="1"' dist/image dist/pdf dist/text dist/web dist/calculator dist/developer | wc -l)" -eq 30
-          test "$(grep -Rsl 'data-longtail-seo="1"' dist/image dist/pdf dist/text dist/web dist/calculator dist/developer | wc -l)" -eq 30
+          roots='dist/image dist/pdf dist/text dist/web dist/calculator dist/developer'
+          test "$(grep -Rsl 'data-priority-seo="1"' $roots | wc -l)" -eq 30
+          test "$(grep -Rsl 'data-longtail-seo="1"' $roots | wc -l)" -eq 30
+          test "$(grep -Rsl 'data-seo-depth="1"' $roots | wc -l)" -eq 30
           grep -q 'id="priorityTools"' dist/index.html
           grep -q '150種類' dist/index.html
           grep -q '公開中 150ツール' dist/index.html
@@ -58,7 +64,11 @@ jobs:
           grep -q '文字数 カウント 空白除く' dist/text/character-count/index.html
           grep -q 'QRコード PNG ダウンロード' dist/web/qr-code/index.html
           grep -q 'JSON formatter 無料' dist/developer/json-formatter/index.html
-          echo 'SEO verification passed: 30 priority pages + 30 long-tail guides + homepage'
+          grep -q '検索意図を詳しく解説' dist/image/compress/index.html
+          grep -q '似たツールとの違い' dist/pdf/merge/index.html
+          grep -q '具体的な利用例' dist/calculator/work-hours/index.html
+          grep -q '使う前に確認したいこと' dist/developer/json-formatter/index.html
+          echo 'Deep SEO verification passed: 30 priority + 30 long-tail + 30 FAQ/comparison/example sections'
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4
