@@ -33,6 +33,7 @@ jobs:
           node --check scripts/generate-seo-guides-plus.mjs
           node --check scripts/generate-question-guides.mjs
           node --check scripts/verify-indexability.mjs
+          node --check scripts/verify-live-indexing.mjs
           node --check scripts/submit-indexnow.mjs
 
       - name: Prepare static site
@@ -117,6 +118,11 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=sugutsucool --branch=main
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify production indexing after deploy
+        env:
+          SITE_BASE_URL: https://sugutsucool.pages.dev
+        run: node scripts/verify-live-indexing.mjs
 
       - name: Notify IndexNow of sitemap URLs
         continue-on-error: true
