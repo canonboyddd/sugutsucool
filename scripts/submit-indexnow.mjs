@@ -18,8 +18,14 @@ const keyCheck=await get(KEY_LOCATION,'IndexNow key file');
 const keyText=(await keyCheck.text()).trim();
 if(keyText!==KEY)throw new Error('IndexNow key file content mismatch');
 const body={host:new URL(BASE).host,key:KEY,keyLocation:KEY_LOCATION,urlList:urls.slice(0,10000)};
-const r=await fetch('https://api.indexnow.org/indexnow',{method:'POST',headers:{'content-type':'application/json; charset=utf-8'},body:JSON.stringify(body)});
-const text=await r.text();
-console.log(`IndexNow: ${r.status} ${r.statusText}; submitted ${body.urlList.length} URLs`);
-if(text)console.log(text.slice(0,1000));
-if(![200,202].includes(r.status))throw new Error(`IndexNow submission failed: HTTP ${r.status}`);
+let lastStatus=0,lastText='';
+for(let i=0;i<6;i++){
+  const r=await fetch('https://api.indexnow.org/indexnow',{method:'POST',headers:{'content-type':'application/json; charset=utf-8'},body:JSON.stringify(body)});
+  lastStatus=r.status;lastText=await r.text();
+  console.log(`IndexNow attempt ${i+1}: ${r.status} ${r.statusText}; submitted ${body.urlList.length} URLs`);
+  if(lastText)console.log(lastText.slice(0,1000));
+  if([200,202].includes(r.status))process.exit(0);
+  if(r.status===403&&/SiteVerificationNotCompleted/i.test(lastText)){await sleep(10000);continue}
+  throw new Error(`IndexNow submission failed: HTTP ${r.status}`);
+}
+throw new Error(`IndexNow verification did not complete after retries: HTTP ${lastStatus} ${lastText.slice(0,300)}`);
