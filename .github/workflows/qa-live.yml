@@ -40,6 +40,10 @@ jobs:
         env:
           QA_BASE_URL: https://sugutsucool.pages.dev
         run: node scripts/qa-guides.mjs
+      - name: Run live QA for SEO admin and priority controls
+        env:
+          QA_BASE_URL: https://sugutsucool.pages.dev
+        run: node scripts/qa-seo-admin.mjs
       - name: Upload QA result
         if: always()
         uses: actions/upload-artifact@v4
