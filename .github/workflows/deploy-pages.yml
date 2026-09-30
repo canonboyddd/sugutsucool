@@ -29,6 +29,7 @@ jobs:
           node --check scripts/generate-seo-guides-plus.mjs
           node --check scripts/generate-question-guides.mjs
           node --check scripts/verify-indexability.mjs
+          node --check scripts/submit-indexnow.mjs
 
       - name: Prepare static site
         shell: bash
@@ -97,6 +98,8 @@ jobs:
           grep -q '勤務時間から休憩時間を引く方法' dist/guides/work-hours-minus-break/index.html
           grep -q 'JSONエラーを見つけて整形する方法' dist/guides/find-json-error/index.html
           grep -q '/assets/guides.css' dist/guides/image-compress/index.html
+          test -f dist/0dadd301dab16f2cf1e3293f3f30a161.txt
+          grep -qx '0dadd301dab16f2cf1e3293f3f30a161' dist/0dadd301dab16f2cf1e3293f3f30a161.txt
           echo 'Deep SEO verification passed: 30 priority tools + 100 dedicated guides'
 
       - name: Verify crawlability, canonicals and sitemap
@@ -109,3 +112,10 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=sugutsucool --branch=main
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify IndexNow of sitemap URLs
+        continue-on-error: true
+        env:
+          INDEXNOW_BASE_URL: https://sugutsucool.pages.dev
+          INDEXNOW_KEY: 0dadd301dab16f2cf1e3293f3f30a161
+        run: node scripts/submit-indexnow.mjs
