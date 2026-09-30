@@ -6,6 +6,13 @@ on:
     paths:
       - 'index.html'
       - 'assets/**'
+      - 'image/**'
+      - 'pdf/**'
+      - 'text/**'
+      - 'web/**'
+      - 'calculator/**'
+      - 'developer/**'
+      - 'guides/**'
       - 'scripts/generate-seo-guides*.mjs'
       - 'scripts/generate-question-guides.mjs'
       - '_headers'
@@ -36,17 +43,25 @@ jobs:
           npx lighthouse 'https://sugutsucool.pages.dev/developer/json-formatter/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/developer.json --quiet
           npx lighthouse 'https://sugutsucool.pages.dev/guides/image-compress/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/guide.json --quiet
           npx lighthouse 'https://sugutsucool.pages.dev/guides/image-under-1mb/' --chrome-flags='--headless --no-sandbox' --output=json --output-path=lighthouse-results/question-guide.json --quiet
-      - name: Enforce performance and SEO baseline
+      - name: Enforce performance, accessibility and SEO baseline
         run: |
           node - <<'NODE'
           const fs=require('fs');
+          let failed=false;
           for(const f of ['home','image','developer','guide','question-guide']){
             const j=JSON.parse(fs.readFileSync(`lighthouse-results/${f}.json`));
             const c=j.categories,a=j.audits;
             const s={performance:c.performance.score,accessibility:c.accessibility.score,best:c['best-practices'].score,seo:c.seo.score,lcp:a['largest-contentful-paint']?.numericValue||0,cls:a['cumulative-layout-shift']?.numericValue||0,tbt:a['total-blocking-time']?.numericValue||0};
             console.log(f,s);
-            if(s.performance<0.75||s.accessibility<0.88||s.best<0.88||s.seo<0.95||s.lcp>4500||s.cls>0.20||s.tbt>600) process.exitCode=1;
+            const bad=s.performance<0.75||s.accessibility<0.88||s.best<0.88||s.seo<0.95||s.lcp>4500||s.cls>0.20||s.tbt>600;
+            if(bad){
+              failed=true;
+              const issues=Object.values(a).filter(x=>x&&x.scoreDisplayMode!=='notApplicable'&&typeof x.score==='number'&&x.score<1&&['accessibility','best-practices','seo'].some(cat=>(c[cat]?.auditRefs||[]).some(r=>r.id===x.id)));
+              console.log(`\n${f} failed audits:`);
+              for(const x of issues.slice(0,30)) console.log(`- ${x.id}: ${x.title} (score=${x.score})`);
+            }
           }
+          if(failed) process.exitCode=1;
           NODE
       - name: Upload Lighthouse reports
         if: always()
