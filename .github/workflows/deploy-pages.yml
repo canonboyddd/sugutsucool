@@ -44,6 +44,7 @@ jobs:
             --exclude='functions' \
             --exclude='scripts' \
             --exclude='qa-results' \
+            --exclude='dist' \
             ./ dist/
 
       - name: Generate 100 additional tool pages (150 total)
