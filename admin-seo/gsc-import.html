@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>SuguTsucool｜GSC CSV → 重点30</title>
+<link rel="stylesheet" href="/assets/styles.css">
+<style>
+body{background:#f8fafc}.wrap{max-width:980px;margin:auto;padding:28px 18px 70px}.panel{background:#fff;border:1px solid #dbe4ef;border-radius:18px;padding:18px;margin:14px 0}.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.drop{border:2px dashed #bfdbfe;border-radius:14px;padding:18px}.drop input{display:block;margin-top:10px}.btn{border:0;border-radius:10px;background:#2563eb;color:#fff;font-weight:800;padding:11px 15px;cursor:pointer}.btn.secondary{background:#e8eef8;color:#19345d}.note{color:#64748b;font-size:.82rem}.ok{color:#047857;font-weight:800}.warn{color:#b45309;font-weight:800}table{width:100%;border-collapse:collapse;font-size:.82rem}th,td{text-align:left;padding:9px;border-bottom:1px solid #edf2f7}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;word-break:break-all}.actions{display:flex;gap:10px;flex-wrap:wrap}@media(max-width:720px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main class="wrap">
+<p><a href="/admin-seo/">← SEO・収益分析へ</a></p>
+<h1>Search Console CSV → 重点30</h1>
+<p class="note">GSC Wizardが使えない時でも、Search Consoleの「ページ」CSVと管理画面の重点30 JSONを合成して、本番用 <code>data/seo-priority.json</code> を作れます。</p>
+<div class="row">
+<section class="panel drop"><h2>1. 管理画面JSON</h2><p class="note">/admin-seo/ の「JSON保存」で取得したファイル。</p><input id="baseFile" type="file" accept="application/json,.json"></section>
+<section class="panel drop"><h2>2. Search Console CSV</h2><p class="note">検索パフォーマンス → ページ。日本語/英語見出しに対応。</p><input id="gscFile" type="file" accept="text/csv,.csv"></section>
+</div>
+<section class="panel"><div class="actions"><button id="build" class="btn">重点30を再計算</button><button id="download" class="btn secondary" disabled>seo-priority.json を保存</button></div><p id="status" class="note">2ファイルを選択してください。</p></section>
+<section class="panel"><h2>安全判定</h2><div id="safety" class="note">未計算</div></section>
+<section class="panel"><h2>反映候補</h2><table><thead><tr><th>#</th><th>パス</th><th>Score</th><th>表示</th><th>Click</th><th>順位</th></tr></thead><tbody id="result"><tr><td colspan="6">未計算</td></tr></tbody></table></section>
+</main>
+<script>
+(()=>{const $=s=>document.querySelector(s);let output=null;
+const normPath=v=>{try{if(!v)return'';const u=new URL(String(v),location.origin);return u.pathname.replace(/\/+$/,'/')||'/'}catch{return String(v).trim().replace(/^https?:\/\/[^/]+/,'').replace(/\/+$/,'/')||'/'}};
+function csvRows(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'){if(q&&n==='"'){cell+='"';i++}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&n==='\n')i++;row.push(cell);cell='';if(row.some(x=>x.trim()))rows.push(row);row=[]}else cell+=c}if(cell||row.length){row.push(cell);rows.push(row)}return rows}
+const number=v=>Number(String(v??'').replace(/[% ,]/g,''))||0;
+function parseGsc(text){const rows=csvRows(text);if(rows.length<2)return[];const h=rows[0].map(x=>x.trim().toLowerCase());const idx=(...names)=>h.findIndex(x=>names.some(n=>x===n||x.includes(n)));const pi=idx('page','ページ','url'),ci=idx('clicks','クリック数','クリック'),ii=idx('impressions','表示回数','表示'),ri=idx('position','掲載順位','平均掲載順位','順位');if(pi<0)throw new Error('ページ列を認識できません');return rows.slice(1).map(r=>({path:normPath(r[pi]),clicks:ci>=0?number(r[ci]):0,impressions:ii>=0?number(r[ii]):0,position:ri>=0?number(r[ri]):0})).filter(x=>x.path)}
+async function read(file){if(!file)throw new Error('ファイルを2つ選択してください');return file.text()}
+$('#build').onclick=async()=>{try{$('#status').textContent='計算中…';const base=JSON.parse(await read($('#baseFile').files[0])),gsc=parseGsc(await read($('#gscFile').files[0]));const source=Array.isArray(base.priority)?base.priority:[];if(!source.length)throw new Error('管理画面JSONに重点候補がありません');const gm=new Map(gsc.map(x=>[x.path,x]));const maxI=Math.max(1,...gsc.map(x=>x.impressions)),maxC=Math.max(1,...gsc.map(x=>x.clicks));const merged=source.map(x=>{const p=normPath(x.path),g=gm.get(p)||{impressions:0,clicks:0,position:0};const baseScore=Number(x.score)||0;const opportunity=g.position>=4&&g.position<=30?Math.max(0,31-g.position)/27:0;const seo=25*(.55*g.impressions/maxI+.30*g.clicks/maxC+.15*opportunity);return {...x,path:p,gsc_impressions:g.impressions,gsc_clicks:g.clicks,gsc_position:g.position,score:+(baseScore*.75+seo).toFixed(1)}}).sort((a,b)=>b.score-a.score).slice(0,30);const totalPv=source.reduce((s,x)=>s+(Number(x.views)||0),0),matched=merged.filter(x=>x.gsc_impressions>0||x.gsc_clicks>0).length,active=totalPv>=20&&merged.length>=5;output={version:1,active,generated_at:new Date().toISOString(),days:Number(base.days)||30,min_sample_tool_pv:20,source:'admin-seo+gsc-csv',gsc_matched_tools:matched,priority:merged};$('#result').innerHTML=merged.map((x,i)=>`<tr><td>${i+1}</td><td class="mono">${x.path}</td><td><b>${x.score}</b></td><td>${x.gsc_impressions||0}</td><td>${x.gsc_clicks||0}</td><td>${x.gsc_position?x.gsc_position.toFixed(1):'-'}</td></tr>`).join('');$('#safety').innerHTML=active?`<span class="ok">反映可能</span>：ツールPV合計 ${totalPv}、GSC一致 ${matched}件。保存JSONは active=true です。`:`<span class="warn">自動反映を停止</span>：ツールPV合計 ${totalPv}。20PV未満または候補不足のため active=false で保存します。`;$('#download').disabled=false;$('#status').textContent='計算完了'}catch(e){output=null;$('#download').disabled=true;$('#status').textContent='エラー: '+e.message}}
+$('#download').onclick=()=>{if(!output)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(output,null,2)],{type:'application/json'}));a.download='seo-priority.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+})();
+</script></body></html>
