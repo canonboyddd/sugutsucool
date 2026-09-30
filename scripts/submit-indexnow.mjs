@@ -1,0 +1,18 @@
+const BASE=(process.env.INDEXNOW_BASE_URL||'https://sugutsucool.pages.dev').replace(/\/$/,'');
+const KEY=process.env.INDEXNOW_KEY||'0dadd301dab16f2cf1e3293f3f30a161';
+const KEY_LOCATION=`${BASE}/${KEY}.txt`;
+const sitemap=await fetch(`${BASE}/sitemap.xml`,{cache:'no-store'});
+if(!sitemap.ok)throw new Error(`sitemap HTTP ${sitemap.status}`);
+const xml=await sitemap.text();
+const urls=[...xml.matchAll(/<loc>(https?:\/\/[^<]+)<\/loc>/g)].map(m=>m[1]);
+if(!urls.length)throw new Error('no URLs found in sitemap');
+const keyCheck=await fetch(KEY_LOCATION,{cache:'no-store'});
+if(!keyCheck.ok)throw new Error(`IndexNow key file HTTP ${keyCheck.status}`);
+const keyText=(await keyCheck.text()).trim();
+if(keyText!==KEY)throw new Error('IndexNow key file content mismatch');
+const body={host:new URL(BASE).host,key:KEY,keyLocation:KEY_LOCATION,urlList:urls.slice(0,10000)};
+const r=await fetch('https://api.indexnow.org/indexnow',{method:'POST',headers:{'content-type':'application/json; charset=utf-8'},body:JSON.stringify(body)});
+const text=await r.text();
+console.log(`IndexNow: ${r.status} ${r.statusText}; submitted ${body.urlList.length} URLs`);
+if(text)console.log(text.slice(0,1000));
+if(![200,202].includes(r.status))throw new Error(`IndexNow submission failed: HTTP ${r.status}`);
