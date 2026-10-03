@@ -32,7 +32,7 @@
       const img=new Image(1,1);(window.__suguCentralPixels||(window.__suguCentralPixels=[])).push(img);img.onload=img.onerror=()=>{const a=window.__suguCentralPixels||[];const i=a.indexOf(img);if(i>=0)a.splice(i,1)};img.src='https://factory-career-site.pages.dev/api/central/collect?'+q.toString();
     }catch(e){}
   }
-  function send(eventType,extra,opts){central(eventType,extra||{});return post(payload(eventType,extra),!!(opts&&opts.beacon))}
+  function send(eventType,extra,opts){return post(payload(eventType,extra),!!(opts&&opts.beacon))}
   window.SuguTsucoolAnalytics={track:send,test(){return send('page_view',{test:true})},optOut(){localStorage.setItem(OPT_OUT_KEY,'1')},optIn(){localStorage.removeItem(OPT_OUT_KEY)}};
 
   const pageView=()=>send('page_view');
