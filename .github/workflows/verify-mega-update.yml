@@ -1,22 +1,27 @@
-name: Verify SuguTsucool Mega Update
+name: Verify SuguTsucool 110-tool catalog
 
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
+      - 'index.html'
+      - 'assets/catalog.js'
+      - 'assets/catalog-extra.js'
+      - 'assets/site.js'
       - '.github/workflows/verify-mega-update.yml'
 
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify production pages
+      - name: Verify production catalog and representative tools
         shell: bash
         run: |
           set -euo pipefail
           base="https://sugutsucool.pages.dev"
           echo "Waiting for edge propagation..."
-          sleep 5
+          sleep 8
           check() {
             url="$1"
             code="$(curl -L -sS -o /tmp/page -w '%{http_code}' "$url")"
@@ -24,16 +29,28 @@ jobs:
             test "$code" = "200"
           }
           check "$base/"
-          grep -q '50種類' /tmp/page
+          grep -q '110種類' /tmp/page
+          grep -q '/assets/catalog-extra.js' /tmp/page
+
+          check "$base/assets/catalog-extra.js"
+          grep -q 'text/extract-emails' /tmp/page
+          grep -q 'calculator/compound-interest' /tmp/page
+          grep -q 'developer/random-string' /tmp/page
+
+          check "$base/text/"
+          grep -q 'data-catalog="text"' /tmp/page
+          check "$base/web/"
+          grep -q 'data-catalog="web"' /tmp/page
+          check "$base/calculator/"
+          grep -q 'data-catalog="calculator"' /tmp/page
           check "$base/developer/"
-          grep -q '開発ツール' /tmp/page
-          check "$base/developer/json-formatter/"
-          grep -q 'tool-suite.js' /tmp/page
-          check "$base/web/password-generator/"
-          grep -q 'tool-suite.js' /tmp/page
-          check "$base/calculator/percentage/"
-          grep -q 'tool-suite.js' /tmp/page
+          grep -q 'data-catalog="developer"' /tmp/page
+
+          check "$base/text/extract-emails/"
+          check "$base/web/jwt-decoder/"
+          check "$base/calculator/compound-interest/"
+          check "$base/developer/random-string/"
           check "$base/sitemap.xml"
-          grep -q '/developer/json-formatter/' /tmp/page
-          grep -q '/web/password-generator/' /tmp/page
-          echo 'PASS: mega update production checks completed'
+          grep -q '/text/extract-emails/' /tmp/page
+          grep -q '/calculator/compound-interest/' /tmp/page
+          echo 'PASS: 110-tool production catalog checks completed'
