@@ -20,19 +20,28 @@ jobs:
         run: |
           set -euo pipefail
           base="https://sugutsucool.pages.dev"
-          echo "Waiting for edge propagation..."
-          sleep 8
           check() {
             url="$1"
             code="$(curl -L -sS -o /tmp/page -w '%{http_code}' "$url")"
             echo "$code  $url"
             test "$code" = "200"
           }
-          check "$base/"
-          grep -q '110種類' /tmp/page
-          grep -q '/assets/catalog-extra.js' /tmp/page
 
-          check "$base/assets/catalog-extra.js"
+          echo "Waiting for the new catalog deployment..."
+          ready=0
+          for attempt in $(seq 1 24); do
+            code="$(curl -L -sS -o /tmp/home -w '%{http_code}' "$base/?catalog-qa=$attempt")"
+            if [ "$code" = "200" ] && grep -q '110種類' /tmp/home && grep -q '/assets/catalog-extra.js' /tmp/home; then
+              ready=1
+              echo "New homepage is live on attempt $attempt"
+              break
+            fi
+            echo "Attempt $attempt: deployment not visible yet"
+            sleep 5
+          done
+          test "$ready" = "1"
+
+          check "$base/assets/catalog-extra.js?qa=1"
           grep -q 'text/extract-emails' /tmp/page
           grep -q 'calculator/compound-interest' /tmp/page
           grep -q 'developer/random-string' /tmp/page
