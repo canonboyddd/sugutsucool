@@ -33,9 +33,15 @@ async function checkPage(path,type){
   page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
   page.on('response',r=>{if(r.url().includes('/data/seo-priority.json'))priorityStatus=r.status()});
   try{
-    const r=await page.goto(BASE+path,{waitUntil:'networkidle',timeout:45000});const status=r?.status()||0;
+    const r=await page.goto(BASE+path,{waitUntil:'domcontentloaded',timeout:45000});const status=r?.status()||0;
     const headers=await r?.allHeaders?.()||{};
     const xRobots=String(headers['x-robots-tag']||'');
+    if(type==='home'){
+      await page.waitForFunction(()=>document.querySelectorAll('[data-catalog] [data-category]').length>=150,{timeout:30000});
+      await page.waitForTimeout(250);
+    }else{
+      await page.waitForSelector('#baseFile',{timeout:15000});
+    }
     const data=await page.evaluate((kind)=>kind==='home'?{
       title:document.title,
       robots:document.querySelector('meta[name="robots"]')?.content||'',
