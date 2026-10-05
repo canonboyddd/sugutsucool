@@ -22,7 +22,7 @@ for(const tool of PRIORITY_TOOLS){
   const keywordHtml=[tool.primary,...tool.secondary].map(k=>`<span class="seo-keyword">${esc(k)}</span>`).join('');
   const useHtml=tool.examples.map(x=>`<li>${esc(x)}</li>`).join('');
   const faqHtml=faq.map(x=>`<details><summary>${esc(x.q)}</summary><p>${esc(x.a)}</p></details>`).join('');
-  const block=`<section class="priority-seo-content" data-priority-seo="1"><div class="priority-badge">検索ニーズの高い定番ツール</div><h2>${esc(tool.name)}を無料で使う</h2><p>${esc(tool.lead)}</p><div class="seo-keywords" aria-label="関連キーワード">${keywordHtml}</div><h2>${esc(tool.name)}の主な使い方</h2><ul>${useHtml}</ul><h2>よく検索される使い方・質問</h2>${faqHtml}<p class="seo-note">SuguTsucoolでは、会員登録やソフトのインストールなしでこのツールを利用できます。処理結果は用途に合わせて確認してからご利用ください。</p></section><script type="application/ld+json">${jsonSafe(faqSchema)}</script>`;
+  const block=`<section class="priority-seo-content" data-priority-seo="1"><div class="priority-badge">便利な定番ツール</div><h2>${esc(tool.name)}を無料で使う</h2><p>${esc(tool.lead)}</p><div class="seo-keywords" aria-label="関連キーワード">${keywordHtml}</div><h2>${esc(tool.name)}の主な使い方</h2><ul>${useHtml}</ul><h2>よくある使い方・質問</h2>${faqHtml}<p class="seo-note">SuguTsucoolでは、会員登録やソフトのインストールなしでこのツールを利用できます。処理結果は用途に合わせて確認してからご利用ください。</p></section><script type="application/ld+json">${jsonSafe(faqSchema)}</script>`;
   html=html.replace('</main>',`${block}</main>`);
   const desc=`${tool.lead} ${tool.primary}を探している方にも使いやすい、登録不要のSuguTsucool。`;
   html=html.replace(/<meta name="description" content="[^"]*">/,`<meta name="description" content="${esc(desc.slice(0,155))}">`);
@@ -36,7 +36,7 @@ home=home.replace('📝 テキスト 27','📝 テキスト 35').replace('🌐 W
 if(!home.includes('id="priorityTools"')){
   const cards=PRIORITY_TOOLS.slice(0,12).map(t=>`<a class="priority-card" href="/${t.route}/"><span>${esc(t.icon)}</span><strong>${esc(t.name)}</strong><small>${esc(t.primary)}</small></a>`).join('');
   const links=PRIORITY_TOOLS.slice(12).map(t=>`<a href="/${t.route}/">${esc(t.name)}</a>`).join('');
-  const section=`<section class="section priority-section" id="priorityTools"><div class="container"><div class="section-title-row"><div><h2>よく使われる定番ツール</h2><div class="section-sub">検索ニーズが明確な30ツールを優先掲載</div></div><a class="section-sub" href="#tools">全150ツールを見る</a></div><div class="priority-grid">${cards}</div><div class="priority-links">${links}</div></div></section>`;
+  const section=`<section class="section priority-section" id="priorityTools"><div class="container"><div class="section-title-row"><div><h2>目的別のおすすめツール</h2><div class="section-sub">画像・PDF・テキスト・Web・計算・開発などから、使いやすいツールをピックアップしました。</div></div><a class="section-sub" href="#tools">全150ツールを見る</a></div><div class="priority-grid">${cards}</div><div class="priority-links">${links}</div></div></section>`;
   home=home.replace('<section class="section" id="tools">',`${section}<section class="section" id="tools">`);
 }
 await fs.writeFile(indexFile,home);
