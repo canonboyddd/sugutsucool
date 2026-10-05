@@ -1,28 +1,24 @@
 name: Lighthouse performance audit
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - 'assets/**'
-      - 'image/**'
-      - 'pdf/**'
-      - 'text/**'
-      - 'web/**'
-      - 'calculator/**'
-      - 'developer/**'
-      - 'guides/**'
-      - 'scripts/generate-seo-guides*.mjs'
-      - 'scripts/generate-question-guides.mjs'
-      - '_headers'
-      - '.github/workflows/lighthouse.yml'
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Deploy SuguTsucool to Cloudflare Pages
+    types:
+      - completed
+    branches:
+      - main
   schedule:
     - cron: '43 18 * * 1'
-  workflow_dispatch:
+
+concurrency:
+  group: sugutsucool-lighthouse
+  cancel-in-progress: true
 
 jobs:
   lighthouse:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 24
     steps:
@@ -32,9 +28,6 @@ jobs:
           node-version: '22'
       - name: Install Lighthouse
         run: npm install --no-save lighthouse
-      - name: Wait for production deployment on push
-        if: github.event_name == 'push'
-        run: sleep 45
       - name: Audit representative pages on mobile profile
         run: |
           mkdir -p lighthouse-results
