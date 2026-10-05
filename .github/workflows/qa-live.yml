@@ -1,14 +1,19 @@
 name: Live QA - all 150 SuguTsucool tools + 100 guides
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Deploy SuguTsucool to Cloudflare Pages
+    types:
+      - completed
+    branches:
+      - main
   schedule:
     - cron: '17 18 * * *'
-  workflow_dispatch:
 
 concurrency:
-  group: sugutsucool-live-qa-${{ github.ref }}
+  group: sugutsucool-live-qa
   cancel-in-progress: true
 
 permissions:
@@ -16,7 +21,7 @@ permissions:
 
 jobs:
   qa:
-    if: ${{ github.actor != 'github-actions[bot]' }}
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
@@ -29,10 +34,7 @@ jobs:
           npm init -y
           npm install --no-save playwright pdf-lib pngjs
           npx playwright install --with-deps chromium
-      - name: Wait for Cloudflare deployment on push
-        if: github.event_name == 'push'
-        run: sleep 50
-      - name: Run live browser QA for existing 110 tools
+      - name: Run live browser QA for base 110 tools
         env:
           QA_BASE_URL: https://sugutsucool.pages.dev
         run: node scripts/qa-live.mjs
