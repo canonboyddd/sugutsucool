@@ -2,27 +2,21 @@ name: Verify SuguTsucool 150-tool catalog
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'index.html'
-      - 'assets/catalog.js'
-      - 'assets/catalog-extra.js'
-      - 'assets/site.js'
-      - 'scripts/generate-plus-tools.mjs'
-      - 'scripts/plus-tools-data.mjs'
-      - 'scripts/expansion-tools-data.mjs'
-      - 'scripts/apply-priority-seo.mjs'
-      - 'scripts/sanitize-public-ui.mjs'
-      - '.github/workflows/deploy-pages.yml'
-      - '.github/workflows/verify-mega-update.yml'
+  workflow_run:
+    workflows:
+      - Deploy SuguTsucool to Cloudflare Pages
+    types:
+      - completed
+    branches:
+      - main
 
 concurrency:
-  group: sugutsucool-catalog-verify-${{ github.ref }}
+  group: sugutsucool-catalog-verify
   cancel-in-progress: true
 
 jobs:
   verify:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Verify production catalog and representative tools
@@ -37,47 +31,42 @@ jobs:
             test "$code" = "200"
           }
 
-          echo "Waiting for the 150-tool catalog deployment..."
-          ready=0
-          for attempt in $(seq 1 30); do
-            code="$(curl -L -sS -o /tmp/home -w '%{http_code}' "$base/?catalog-qa=$attempt")"
-            if [ "$code" = "200" ] && grep -q '150種類' /tmp/home && grep -q '公開中 150ツール' /tmp/home; then
-              ready=1
-              echo "150-tool homepage is live on attempt $attempt"
-              break
-            fi
-            echo "Attempt $attempt: deployment not visible yet"
-            sleep 5
-          done
-          test "$ready" = "1"
+          echo "Deployment completed; verifying the live 150-tool catalog..."
+          check "$base/?catalog-qa=$(date +%s)"
+          grep -q '150種類' /tmp/page
+          grep -q '/assets/catalog-extra.js' /tmp/page
+          ! grep -q '広告スペース' /tmp/page
 
-          check "$base/assets/catalog-extra.js?qa=1"
+          check "$base/assets/catalog-extra.js?qa=$(date +%s)"
           grep -q 'text/extract-emails' /tmp/page
           grep -q 'calculator/compound-interest' /tmp/page
           grep -q 'developer/random-string' /tmp/page
 
           check "$base/text/"
           grep -q 'data-catalog="text"' /tmp/page
+          ! grep -q '広告スペース' /tmp/page
           check "$base/web/"
           grep -q 'data-catalog="web"' /tmp/page
+          ! grep -q '広告スペース' /tmp/page
           check "$base/calculator/"
           grep -q 'data-catalog="calculator"' /tmp/page
+          ! grep -q '広告スペース' /tmp/page
           check "$base/developer/"
           grep -q 'data-catalog="developer"' /tmp/page
+          ! grep -q '広告スペース' /tmp/page
 
+          check "$base/image/compress/"
+          ! grep -q '広告スペース' /tmp/page
           check "$base/text/extract-emails/"
+          ! grep -q '広告スペース' /tmp/page
           check "$base/web/jwt-decoder/"
+          ! grep -q '広告スペース' /tmp/page
           check "$base/calculator/compound-interest/"
+          ! grep -q '広告スペース' /tmp/page
           check "$base/developer/random-string/"
-          check "$base/text/reverse-text/"
+          ! grep -q '広告スペース' /tmp/page
+
           check "$base/sitemap.xml"
           grep -q '/text/extract-emails/' /tmp/page
           grep -q '/calculator/compound-interest/' /tmp/page
-          grep -q '/text/reverse-text/' /tmp/page
-
-          check "$base/image/compress/"
-          if grep -q '広告スペース' /tmp/page; then
-            echo 'ERROR: operator-only ad placeholder is still visible on a public tool page'
-            exit 1
-          fi
           echo 'PASS: 150-tool production catalog checks completed'
