@@ -32,6 +32,7 @@ jobs:
           node --check functions/api/rakuten.js
           node --check scripts/generate-seo-guides-plus.mjs
           node --check scripts/generate-question-guides.mjs
+          node --check scripts/sanitize-public-ui.mjs
           node --check scripts/verify-indexability.mjs
           node --check scripts/verify-live-indexing.mjs
           node --check scripts/submit-indexnow.mjs
@@ -73,6 +74,9 @@ jobs:
       - name: Expand guide library to 100 question-focused pages
         run: node scripts/generate-question-guides.mjs
 
+      - name: Remove operator-only placeholders and block public UI leaks
+        run: node scripts/sanitize-public-ui.mjs --root=dist
+
       - name: Verify deep SEO and guide build
         shell: bash
         run: |
@@ -106,6 +110,11 @@ jobs:
           grep -q '/assets/guides.css' dist/guides/image-compress/index.html
           test -f dist/0dadd301dab16f2cf1e3293f3f30a161.txt
           grep -qx '0dadd301dab16f2cf1e3293f3f30a161' dist/0dadd301dab16f2cf1e3293f3f30a161.txt
+          if grep -RIl '広告スペース' dist --include='*.html' | grep -q .; then
+            echo 'ERROR: public ad placeholder remains in dist'
+            grep -RIl '広告スペース' dist --include='*.html'
+            exit 1
+          fi
           echo 'Deep SEO verification passed: 30 priority tools + 100 dedicated guides'
 
       - name: Verify crawlability, canonicals and sitemap
