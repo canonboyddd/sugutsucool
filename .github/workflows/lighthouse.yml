@@ -2,13 +2,7 @@ name: Lighthouse performance audit
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - Deploy SuguTsucool to Cloudflare Pages
-    types:
-      - completed
-    branches:
-      - main
+  # Full Lighthouse audits are weekly and on demand, not on every deployment.
   schedule:
     - cron: '43 18 * * 1'
 
@@ -18,7 +12,6 @@ concurrency:
 
 jobs:
   lighthouse:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 24
     steps:
