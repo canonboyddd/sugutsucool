@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+    # Documentation and CI-only edits do not need a paid Actions deployment.
+    paths-ignore:
+      - '.github/workflows/**'
+      - 'README.md'
+      - 'docs/**'
+      - 'qa-results/**'
   workflow_dispatch:
 
 concurrency:
