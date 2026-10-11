@@ -2,15 +2,9 @@ name: Live QA - all 150 SuguTsucool tools + 100 guides
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - Deploy SuguTsucool to Cloudflare Pages
-    types:
-      - completed
-    branches:
-      - main
+  # Heavy full browser regression runs weekly or on demand, not after every deployment.
   schedule:
-    - cron: '17 18 * * *'
+    - cron: '17 18 * * 1'
 
 concurrency:
   group: sugutsucool-live-qa
@@ -21,7 +15,6 @@ permissions:
 
 jobs:
   qa:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 75
     steps:
