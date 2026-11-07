@@ -1,0 +1,30 @@
+{
+  "results": [
+    {
+      "mode": "human",
+      "events": 2,
+      "passed": true
+    },
+    {
+      "mode": "qa",
+      "events": 0,
+      "passed": true
+    },
+    {
+      "mode": "ops_qa",
+      "events": 0,
+      "passed": true
+    },
+    {
+      "mode": "bot",
+      "events": 0,
+      "passed": true
+    },
+    {
+      "mode": "owner",
+      "events": 0,
+      "passed": true
+    }
+  ],
+  "allNetworkFulfilledLocally": true
+}

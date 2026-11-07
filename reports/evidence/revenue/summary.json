@@ -1,0 +1,9 @@
+{
+  "base": "http://127.0.0.1:8766",
+  "totalTools": 110,
+  "coreTools": 50,
+  "plusTools": 60,
+  "failures": [],
+  "notes": [],
+  "checkedAt": "2026-11-07T16:29:58.980Z"
+}

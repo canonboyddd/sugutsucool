@@ -1,0 +1,52 @@
+{
+  "base": "https://sugutsucool.pages.dev",
+  "failed": 0,
+  "results": [
+    {
+      "name": "priority-json",
+      "ok": true,
+      "status": 200,
+      "active": false,
+      "items": 0,
+      "minSample": 20
+    },
+    {
+      "name": "live-crawl-files",
+      "ok": true,
+      "robotsStatus": 200,
+      "sitemapStatus": 200,
+      "urlCount": 260,
+      "robotsOk": true,
+      "sitemapOk": true
+    },
+    {
+      "name": "home",
+      "ok": true,
+      "status": 200,
+      "priorityStatus": 200,
+      "xRobots": "",
+      "title": "SuguTsucool｜150種類の無料オンライン便利ツール",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1",
+      "canonical": "https://sugutsucool.pages.dev/",
+      "cards": 150,
+      "badge": false,
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "name": "gsc-import",
+      "ok": true,
+      "status": 200,
+      "priorityStatus": null,
+      "xRobots": "",
+      "title": "SuguTsucool｜GSC CSV → 重点30",
+      "robots": "noindex,nofollow",
+      "baseFile": true,
+      "gscFile": true,
+      "build": true,
+      "download": true,
+      "overflow": false,
+      "errors": []
+    }
+  ]
+}

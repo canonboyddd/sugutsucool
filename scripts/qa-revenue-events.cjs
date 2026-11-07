@@ -8,7 +8,7 @@ const {chromium}=req('playwright');
  const script=await fs.readFile('assets/analytics-track.js','utf8');
  const browser=await chromium.launch({headless:true,channel:process.env.QA_BROWSER_CHANNEL||undefined});
  const results=[];
- try{for(const mode of ['human','qa','bot','owner']){
+ try{for(const mode of ['human','qa','ops_qa','bot','owner']){
   const context=await browser.newContext({userAgent:mode==='bot'?'ExampleCrawler/1.0':'Mozilla/5.0 Chrome/130 Safari/537.36'}),events=[];
   // This fixture intentionally simulates a normal browser. All URLs, including
   // the collector and the external ad, are fulfilled locally before navigation.
@@ -20,7 +20,7 @@ const {chromium}=req('playwright');
    if(u.hostname==='sugutsucool-analytics.super-canon-boy.workers.dev'&&u.pathname==='/collect')events.push(JSON.parse(route.request().postData()));
    return route.fulfill({status:200,headers:{'access-control-allow-origin':'*'},contentType:'application/javascript',body:''});
   });
-  const page=await context.newPage();await page.goto('https://sugutsucool.pages.dev/content/'+(mode==='qa'?'?qa=1':''));await page.waitForTimeout(200);
+  const page=await context.newPage();await page.goto('https://sugutsucool.pages.dev/content/'+(['qa','ops_qa'].includes(mode)?'?'+mode+'=1':''));await page.waitForTimeout(200);
   await page.evaluate(()=>document.querySelector('#cta').dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true})));
   await page.waitForTimeout(100);assert.equal(events.filter(e=>e.event_type==='affiliate_click').length,0);
   await page.locator('#cta').click();await page.waitForTimeout(200);

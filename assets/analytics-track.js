@@ -4,7 +4,7 @@
   const OPT_OUT_KEY='sugutsucool_analytics_optout';
   const API_KEY='sugutsucool_analytics_api';
   const qa=new URLSearchParams(location.search);
-  if(location.pathname.startsWith('/admin-analytics')||location.pathname.startsWith('/admin-seo')||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)||['qa','qa_mode','ops_test','test_mode'].some(k=>qa.has(k))||navigator.webdriver||/bot|crawler|spider|headless|lighthouse|playwright|puppeteer|selenium/i.test(navigator.userAgent||''))return;
+  if(location.pathname.startsWith('/admin-analytics')||location.pathname.startsWith('/admin-seo')||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)||['qa','ops_qa','qa_mode','ops_test','test_mode'].some(k=>qa.has(k))||navigator.webdriver||/bot|crawler|spider|headless|lighthouse|playwright|puppeteer|selenium/i.test(navigator.userAgent||''))return;
   try{if(localStorage.getItem(OPT_OUT_KEY)==='1'||['ops_owner_excluded','fc_owner_excluded','site_analytics_owner_excluded_v1'].some(k=>localStorage.getItem(k)==='1')||/(?:^|;\s*)ops_owner_excluded=1(?:;|$)/.test(document.cookie))return}catch{return}
 
   // Core pages and generated tools/guides share one guarded central tracker.

@@ -1,0 +1,12 @@
+✔ Unrelated tools never request an advertisement or need credentials (19.096ms)
+✔ Invalid tool and missing configuration have safe explicit responses (0.4608ms)
+✔ Relevant search preserves configured IDs and emits only usable affiliate products (1.1423ms)
+✔ Rate limits, malformed payloads and network failures fail closed without upstream details (1.237ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 105.1625
