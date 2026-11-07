@@ -1,0 +1,18 @@
+{
+  "project": "sugutsucool",
+  "implementationCommit": "9f2dcbe0fcf601fa2a1964838d6e8bb7b4216e10",
+  "canonicalDeployment": {
+    "id": "33d5aa45-7b6d-4149-9e8a-35b079f15791",
+    "created_on": "2026-11-07T16:36:17.155768Z",
+    "deployed_on": "2026-11-07T16:36:18.661193Z",
+    "status": "success",
+    "commit": "9f2dcbe0fcf601fa2a1964838d6e8bb7b4216e10",
+    "uses_functions": true
+  },
+  "actions": [
+    {"id": 42392102682, "name": "Deploy SuguTsucool to Cloudflare Pages", "conclusion": "success"},
+    {"id": 42392102534, "name": "Verify Rakuten affiliate API", "conclusion": "success"},
+    {"id": 42392102701, "name": "Check SuguTsucool Rakuten Cloudflare Secrets", "conclusion": "success"},
+    {"id": 42392145578, "name": "Verify SuguTsucool 150-tool catalog", "conclusion": "success"}
+  ]
+}

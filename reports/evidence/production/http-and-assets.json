@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-11-07T16:40:30.484Z",
+  "implementationCommit": "9f2dcbe0fcf601fa2a1964838d6e8bb7b4216e10",
+  "assets": [
+    {
+      "path": "assets/affiliate-tools.js",
+      "status": 200,
+      "sha256": "9ab6a1266dc4d2a7730776782e7a0a32898a215dc67f75724cac93cb94588690",
+      "matchesImplementation": true
+    },
+    {
+      "path": "assets/analytics-track.js",
+      "status": 200,
+      "sha256": "c51246b3dccb961982429c7ef4f428f09bd897264f40f74b37d1c52c864a4231",
+      "matchesImplementation": true
+    },
+    {
+      "path": "assets/site.js",
+      "status": 200,
+      "sha256": "b285797eda6016be94945b5245a5ac8b32d67febee52b1a0e0843b6736825942",
+      "matchesImplementation": true
+    }
+  ],
+  "api": [
+    {
+      "tool": "image/compress",
+      "status": 200,
+      "ok": true,
+      "disabled": true,
+      "items": 0,
+      "allAffiliateUrlsValid": true,
+      "allHaveImageAndPositivePrice": true
+    },
+    {
+      "tool": "calculator/electricity-cost",
+      "status": 200,
+      "ok": true,
+      "disabled": false,
+      "items": 4,
+      "allAffiliateUrlsValid": true,
+      "allHaveImageAndPositivePrice": true
+    }
+  ]
+}

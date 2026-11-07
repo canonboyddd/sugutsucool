@@ -1,0 +1,106 @@
+{
+  "stage": "production",
+  "base": "https://sugutsucool.pages.dev",
+  "rows": [
+    {
+      "path": "/image/compress/",
+      "width": 375,
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "title": "画像圧縮 無料｜JPG・PNG・WebPをオンラインで軽量化｜SuguTsucool",
+      "ads": 0,
+      "h1": "画像圧縮",
+      "canonical": "https://sugutsucool.pages.dev/image/compress/"
+    },
+    {
+      "path": "/calculator/electricity-cost/",
+      "width": 375,
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "title": "電気料金計算｜無料・登録不要オンラインツール｜SuguTsucool",
+      "ads": 4,
+      "h1": "電気料金計算",
+      "canonical": "https://sugutsucool.pages.dev/calculator/electricity-cost/"
+    },
+    {
+      "path": "/web/domain-extractor/",
+      "width": 375,
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "title": "ドメイン抽出｜無料・登録不要オンラインツール｜SuguTsucool",
+      "ads": 1,
+      "h1": "ドメイン抽出",
+      "canonical": "https://sugutsucool.pages.dev/web/domain-extractor/"
+    },
+    {
+      "path": "/image/compress/",
+      "width": 768,
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "title": "画像圧縮 無料｜JPG・PNG・WebPをオンラインで軽量化｜SuguTsucool",
+      "ads": 0,
+      "h1": "画像圧縮",
+      "canonical": "https://sugutsucool.pages.dev/image/compress/"
+    },
+    {
+      "path": "/calculator/electricity-cost/",
+      "width": 768,
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "title": "電気料金計算｜無料・登録不要オンラインツール｜SuguTsucool",
+      "ads": 4,
+      "h1": "電気料金計算",
+      "canonical": "https://sugutsucool.pages.dev/calculator/electricity-cost/"
+    },
+    {
+      "path": "/web/domain-extractor/",
+      "width": 768,
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "title": "ドメイン抽出｜無料・登録不要オンラインツール｜SuguTsucool",
+      "ads": 1,
+      "h1": "ドメイン抽出",
+      "canonical": "https://sugutsucool.pages.dev/web/domain-extractor/"
+    },
+    {
+      "path": "/image/compress/",
+      "width": 1440,
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "title": "画像圧縮 無料｜JPG・PNG・WebPをオンラインで軽量化｜SuguTsucool",
+      "ads": 0,
+      "h1": "画像圧縮",
+      "canonical": "https://sugutsucool.pages.dev/image/compress/"
+    },
+    {
+      "path": "/calculator/electricity-cost/",
+      "width": 1440,
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "title": "電気料金計算｜無料・登録不要オンラインツール｜SuguTsucool",
+      "ads": 4,
+      "h1": "電気料金計算",
+      "canonical": "https://sugutsucool.pages.dev/calculator/electricity-cost/"
+    },
+    {
+      "path": "/web/domain-extractor/",
+      "width": 1440,
+      "status": 200,
+      "errors": [],
+      "overflow": false,
+      "title": "ドメイン抽出｜無料・登録不要オンラインツール｜SuguTsucool",
+      "ads": 1,
+      "h1": "ドメイン抽出",
+      "canonical": "https://sugutsucool.pages.dev/web/domain-extractor/"
+    }
+  ],
+  "analyticsAndAspIntercepted": true
+}

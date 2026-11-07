@@ -69,9 +69,31 @@
 
 着手時の読み取り確認ではトップ、robots、sitemapはHTTP200。`/api/rakuten?tool=image%2Fcompress`はHTTP200で無関係なSSD4件、`tool=calculator%2Felectricity-cost`もHTTP200で電力量計4件を返した。API認証・affiliate URLの生成が動作していることは確認できた。ASP側へクリックして有効性を確認する操作は、成果・クリック汚染を避けるため実施していない。
 
-本レポート作成時点ではローカル検証済み・実装commit作成済みで、mainへのpushと本番反映は親作業でレビュー後に実施する。反映後にGitHub Actions結果、Cloudflare配信commit、非対象toolのdisabled応答、対象toolの有効商品、更新assetsのhash、画面を確認して記録を追記する。
+実装はmainへ反映済み。Cloudflare本番deployment `33d5aa45-7b6d-4149-9e8a-35b079f15791` が2026-11-08 01:36 JSTにsuccessとなり、canonical配信commitは `9f2dcbe0fcf601fa2a1964838d6e8bb7b4216e10` と一致した。`uses_functions:true`も確認した。追加レポートは配信対象から除外しており、docs-only commitで本番を更新しない。
 
-既存Actionsは2026-11-03のLive QA `41557231667`成功。Lighthouse `41558799975`は変更前から失敗しており、home TBT1046.5msが600ms基準を超過（performance0.77 / accessibility0.93 / SEO1、console/contrast指摘もあり）。今回変更後のLighthouse再実測が必要で、未実測の改善値は記載しない。基準は維持した。
+本番反映後の証拠は `reports/evidence/production/` に保存した。
+
+- [既存Deploy Actions](https://github.com/canonboyddd/sugutsucool/actions/runs/42392102682): success（既存ビルド/SEO検証/本番indexing検証を含む）。
+- [楽天API検証](https://github.com/canonboyddd/sugutsucool/actions/runs/42392102534)、[楽天secret名・型検証](https://github.com/canonboyddd/sugutsucool/actions/runs/42392102701)、[150ツールcatalog検証](https://github.com/canonboyddd/sugutsucool/actions/runs/42392145578): すべてsuccess。
+- `/api/rakuten?tool=image%2Fcompress`: HTTP200、`disabled:true`、商品0。`tool=calculator%2Felectricity-cost`: HTTP200、商品4、全件有効なHTTPS affiliate host・画像・正価格を持つ。ASP側への遷移・成果確認は行っていない。
+- 配信された `affiliate-tools.js / analytics-track.js / site.js` は改行を正規化したSHA256が実装と3件とも一致。
+- 本番の150ツールdesktop/mobile300画面と実機能8件、100ガイド113画面、SEO/admin4チェックを再実施し、すべて失敗0。画像/PDF/QR/計算を実行して既存結果を確認。
+- 本番3ページ×375/768/1440pxの9画面を保存。画像圧縮の広告0、電気料金計算は関連商品4、domain抽出はA8のみ1。横overflow・JS例外0。商品画像を含む本番実データの画面を目視確認。
+- 全ブラウザQAはnavigation前に広告・collector通信を遮断し、`qa=1`またはowner optoutも適用。本物の申込・購入・広告クリック・analytics書込を発生させていない。
+
+既存Actionsは2026-11-03のLive QA `41557231667`成功。Lighthouse `41558799975`は変更前から失敗しており、home TBT1046.5msが600ms基準を超過（performance0.77 / accessibility0.93 / SEO1、console/contrast指摘もあり）。
+
+変更後の本番5ページをLighthouse13.6.0で再実測し、**5ページとも既存の合格基準を満たした**。Microsoft Edge/Windows上で標準mobile設定・標準throttlingを使用し、`qa=1`とcollector/ASP通信遮断を加えた。性能基準や監査項目を緩和していない。環境と設定、残る個別監査指摘も `lighthouse-summary.json` に保存した。
+
+|ページ|Performance|Accessibility|Best practices|SEO|LCP ms|TBT ms|CLS|
+|---|---:|---:|---:|---:|---:|---:|---:|
+|トップ|0.96|0.92|1.00|1.00|1137|227|0|
+|画像圧縮|1.00|1.00|1.00|1.00|1202|90|0|
+|JSON整形|0.98|1.00|1.00|1.00|945|48|0.090|
+|画像圧縮ガイド|1.00|0.91|1.00|1.00|953|0|0|
+|1MB以下のガイド|1.00|0.92|1.00|1.00|924|85|0|
+
+既存基準はPerformance≥0.75、Accessibility/Best practices≥0.88、SEO≥0.95、LCP≤4500ms、TBT≤600ms、CLS≤0.20。過去Actionsは別ホストであり、TBT差をそのまま変更の因果効果と断定しない。一部既存テキストのcontrast指摘は残るが合格基準は満たす。Actions上の新しいLighthouse workflow実行結果とは区別し、これは今回取得した本番lab測定である。
 
 ## 数値、共通計測、効果の検証条件
 
@@ -81,4 +103,4 @@
 - UA/webdriver除外は既知の自動操作に有効だが、人間であることを完全には保証しない。新しいボット挙動はサーバ側スクリーニングと合わせて調査し、過去rawを後付けで有効ユーザーへ分類しない。
 - CTRは同じCTA/program/placement/variantの可視表示を分母とし、実クリックを分子にする。ASP発生・確定報酬はASP CSVを取得して別管理する。PVやクリックを成果や確定報酬に換算しない。
 - まず有効表示・click sessionがたまるまで観測する。変更前データの計測欠陥を考慮し、単純なraw CTRの前後比較を成功判定にしない。母数・期間・端末構成・検索流入を揃え、ASP発生・承認率・確定報酬まで確認する。
-- 現時点の残項目は、ASP最新承認/成果CSV、GSC検索実績、配信後QA、Lighthouse再実測、中央tracker反映後の実データ到達確認。必要なASP設定を推測で追加せず、未承認案件や新IDは作成していない。
+- 現時点の残項目は、ASP最新承認/成果CSV、GSC検索実績、中央tracker反映後の実データ到達確認。必要なASP設定を推測で追加せず、未承認案件や新IDは作成していない。
