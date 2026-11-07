@@ -1,9 +1,14 @@
 (function(){
+  if(window.__suguAnalyticsLoaded)return;window.__suguAnalyticsLoaded=true;
   const DEFAULT_API='https://sugutsucool-analytics.super-canon-boy.workers.dev';
   const OPT_OUT_KEY='sugutsucool_analytics_optout';
   const API_KEY='sugutsucool_analytics_api';
-  if(location.pathname.startsWith('/admin-analytics')||location.pathname.startsWith('/admin-seo')) return;
-  if(localStorage.getItem(OPT_OUT_KEY)==='1') return;
+  const qa=new URLSearchParams(location.search);
+  if(location.pathname.startsWith('/admin-analytics')||location.pathname.startsWith('/admin-seo')||/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)||['qa','qa_mode','ops_test','test_mode'].some(k=>qa.has(k))||navigator.webdriver||/bot|crawler|spider|headless|lighthouse|playwright|puppeteer|selenium/i.test(navigator.userAgent||''))return;
+  try{if(localStorage.getItem(OPT_OUT_KEY)==='1'||['ops_owner_excluded','fc_owner_excluded','site_analytics_owner_excluded_v1'].some(k=>localStorage.getItem(k)==='1')||/(?:^|;\s*)ops_owner_excluded=1(?:;|$)/.test(document.cookie))return}catch{return}
+
+  // Core pages and generated tools/guides share one guarded central tracker.
+  if(!window.__opsLoader&&!window.__centralOpsTracker){window.__opsLoader=true;const s=document.createElement('script');s.src='https://factory-career-site.pages.dev/assets/central-tracker.js?v=20261108';s.dataset.site='sugutsucool';s.async=true;document.head.appendChild(s)}
 
   const api=(localStorage.getItem(API_KEY)||DEFAULT_API).replace(/\/$/,'');
   const vidKey='sugutsucool_vid', sidKey='sugutsucool_sid', sidTsKey='sugutsucool_sid_ts';
@@ -23,28 +28,23 @@
   function source(){try{if(!document.referrer)return 'direct';const u=new URL(document.referrer);if(u.hostname===location.hostname)return 'internal';if(/google\./i.test(u.hostname))return 'google';if(/bing\.com/i.test(u.hostname))return 'bing';if(/yahoo\./i.test(u.hostname))return 'yahoo';if(/x\.com|twitter\.com/i.test(u.hostname))return 'x';if(/instagram\.com/i.test(u.hostname))return 'instagram';if(/facebook\.com/i.test(u.hostname))return 'facebook';return u.hostname.replace(/^www\./,'')}catch(e){return 'other'}}
   const g=()=>guideInfo();
   function baseExtra(){const gi=g();return {tool_path:toolPath(),page_kind:pageKind(),guide_slug:gi.slug,related_tool:gi.related}}
-  function payload(eventType,extra){return {event_type:eventType,path:location.pathname,tool:toolName(),visitor_id:visitor,session_id:session,referrer:document.referrer||'',source:source(),device:device(),title:document.title,extra:{...baseExtra(),...(extra||{})}}}
+  function safeReferrer(){try{const u=new URL(document.referrer);return u.origin+u.pathname}catch{return ''}}
+  function payload(eventType,extra){return {event_type:eventType,path:location.pathname,tool:toolName(),visitor_id:visitor,session_id:session,referrer:safeReferrer(),source:source(),device:device(),title:document.title,extra:{...baseExtra(),...(extra||{})}}}
   function post(body,useBeacon){const url=api+'/collect',json=JSON.stringify(body);if(useBeacon&&navigator.sendBeacon){try{const ok=navigator.sendBeacon(url,new Blob([json],{type:'text/plain;charset=UTF-8'}));if(ok)return Promise.resolve(true)}catch(e){}}return fetch(url,{method:'POST',headers:{'content-type':'text/plain;charset=UTF-8'},body:json,keepalive:true,mode:'cors',credentials:'omit'}).then(r=>{if(!r.ok)throw new Error('analytics HTTP '+r.status);return true}).catch(err=>{try{console.warn('[SuguTsucool Analytics]',err.message||err)}catch(e){}return false})}
-  function central(eventType,extra){
-    if(eventType!=='page_view'&&eventType!=='affiliate_click')return;
-    try{
-      const q=new URLSearchParams({site_key:'sugutsucool',event_name:eventType,browser_id:visitor,session_id:session,page_path:location.pathname,page_title:document.title,referrer:document.referrer||'',device_type:device(),program:eventType==='affiliate_click'?String(extra?.network||''):'',placement:eventType==='affiliate_click'?String(extra?.label||'').slice(0,160):''});
-      const img=new Image(1,1);(window.__suguCentralPixels||(window.__suguCentralPixels=[])).push(img);img.onload=img.onerror=()=>{const a=window.__suguCentralPixels||[];const i=a.indexOf(img);if(i>=0)a.splice(i,1)};img.src='https://factory-career-site.pages.dev/api/central/collect?'+q.toString();
-    }catch(e){}
-  }
   function send(eventType,extra,opts){return post(payload(eventType,extra),!!(opts&&opts.beacon))}
-  window.SuguTsucoolAnalytics={track:send,test(){return send('page_view',{test:true})},optOut(){localStorage.setItem(OPT_OUT_KEY,'1')},optIn(){localStorage.removeItem(OPT_OUT_KEY)}};
+  window.SuguTsucoolAnalytics={track:send,test(){return Promise.resolve({excluded:true,reason:'test_events_are_not_live_traffic'})},optOut(){localStorage.setItem(OPT_OUT_KEY,'1')},optIn(){localStorage.removeItem(OPT_OUT_KEY)}};
 
   const pageView=()=>send('page_view');
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',pageView);else pageView();
 
   document.addEventListener('click',function(e){
+    if(!e.isTrusted||e.button!==0)return;
     const a=e.target.closest('a'),b=e.target.closest('button');
     if(a){
       const href=a.getAttribute('href')||'';
       const label=(a.querySelector('h3')?.textContent||a.querySelector('strong')?.textContent||a.textContent||'').trim().replace(/\s+/g,' ').slice(0,100);
       const affiliate=a.dataset.affiliate||'';
-      if(affiliate) send('affiliate_click',{network:affiliate,label:a.dataset.affiliateLabel||label,target:href},{beacon:true});
+      if(affiliate) send('affiliate_click',{network:affiliate,program:a.dataset.program||affiliate,placement:a.dataset.placement||pageKind(),variant:a.dataset.variant||'control',label:a.dataset.affiliateLabel||label},{beacon:true});
       else{
         try{
           const u=new URL(a.href,location.href),internal=u.hostname===location.hostname;
@@ -65,8 +65,8 @@
   document.addEventListener('toggle',e=>{const d=e.target;if(d?.tagName==='DETAILS'&&d.open){const q=d.querySelector('summary')?.textContent?.trim().slice(0,140)||'';send('faq_open',{question:q})}},true);
   let searchTimer=null;const search=document.getElementById('toolSearch');if(search)search.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{const visible=[...document.querySelectorAll('[data-tool]')].filter(x=>getComputedStyle(x).display!=='none').length;send('search',{query_length:search.value.trim().length,results:visible})},800)});
   const originalDownload=window.downloadBlob;if(typeof originalDownload==='function')window.downloadBlob=function(blob,name){send('tool_complete',{filename_ext:(name&&name.includes('.'))?name.split('.').pop().slice(0,10):'',bytes:blob&&blob.size||0});return originalDownload.apply(this,arguments)};
-  window.addEventListener('error',e=>send('client_error',{kind:'error',message:String(e.message||'error').slice(0,180)}));
-  window.addEventListener('unhandledrejection',e=>send('client_error',{kind:'promise',message:String(e.reason?.message||e.reason||'unhandled rejection').slice(0,180)}));
+  window.addEventListener('error',()=>send('client_error',{kind:'error'}));
+  window.addEventListener('unhandledrejection',()=>send('client_error',{kind:'promise'}));
 
   const depths=new Set();let scrollTimer=0;window.addEventListener('scroll',()=>{clearTimeout(scrollTimer);scrollTimer=setTimeout(()=>{const max=Math.max(1,document.documentElement.scrollHeight-innerHeight),pct=Math.round(scrollY/max*100);[50,90].forEach(n=>{if(pct>=n&&!depths.has(n)){depths.add(n);send('scroll_depth',{percent:n})}})},250)},{passive:true});
   setTimeout(()=>{if(document.visibilityState==='visible')send('engaged_30s')},30000);

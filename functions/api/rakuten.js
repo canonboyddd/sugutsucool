@@ -1,66 +1,44 @@
 const PRODUCT_API='https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 const SITE_ORIGIN='https://sugutsucool.pages.dev';
 
-const TOOL_KEYWORDS={
-  'image/compress':'外付けSSD',
-  'image/resize':'SDカード',
-  'image/convert':'カードリーダー',
-  'image/rotate-flip':'外付けSSD',
-  'image/exif-remove':'SDカード',
-  'image/to-pdf':'スキャナー',
-  'pdf/merge':'ドキュメントスキャナー',
-  'pdf/split':'プリンター',
-  'pdf/delete-pages':'外付けSSD',
-  'pdf/reorder':'ドキュメントスキャナー',
-  'text/character-count':'キーボード',
-  'text/word-count':'キーボード',
-  'text/find-replace':'キーボード',
-  'text/kana-converter':'日本語キーボード',
-  'text/remove-spaces':'キーボード',
-  'text/random-picker':'マウス',
-  'web/qr-code':'スマホスタンド',
-  'web/color-converter':'モニター',
-  'web/password-generator':'セキュリティキー',
-  'web/url-encode':'USBハブ',
-  'web/base64':'USBハブ',
-  'calculator/work-hours':'デスク電卓',
-  'calculator/discount':'電卓',
-  'calculator/percentage':'関数電卓',
-  'calculator/consumption-tax':'電卓',
-  'calculator/date-difference':'デスクカレンダー',
-  'calculator/age':'デスクカレンダー',
-  'calculator/hourly-wage':'電卓',
-  'calculator/overtime-pay':'電卓',
-  'calculator/loan-payment':'金融電卓',
-  'calculator/monthly-investment':'金融電卓',
-  'calculator/fuel-cost':'車載スマホホルダー',
-  'calculator/time-add':'デジタル時計',
-  'calculator/unit-length':'メジャー',
-  'calculator/unit-weight':'デジタルスケール',
-  'calculator/temperature':'温度計',
-  'calculator/bmi':'体重計',
-  'calculator/ideal-weight':'体重計',
-  'calculator/pace':'ランニングウォッチ',
-  'calculator/electricity-cost':'ワットチェッカー',
-  'calculator/fuel-economy':'車載スマホホルダー',
-  'developer/json-formatter':'プログラミング キーボード',
-  'developer/csv-json':'USBメモリ',
-  'developer/hash-generator':'セキュリティキー'
+// A tool category alone does not imply an intent to buy hardware. Only these
+// explicit workflows have a useful next step involving a physical product.
+const TOOL_PRODUCTS={
+  'image/to-pdf':['ドキュメントスキャナー','紙の写真や書類を読み込んでからPDFにまとめる場合'],
+  'pdf/merge':['ドキュメントスキャナー','紙の書類を読み込んでからPDFを結合する場合'],
+  'pdf/reorder':['ドキュメントスキャナー','紙の書類を読み込んでからページを整理する場合'],
+  'calculator/unit-length':['メジャー','実物の長さを測り、換算する入力値を確かめる場合'],
+  'calculator/unit-weight':['デジタルスケール','実物の重さを測り、換算する入力値を確かめる場合'],
+  'calculator/temperature':['温度計','実際の温度を測り、換算する入力値を確かめる場合'],
+  'calculator/bmi':['体重計','体重を測り、計算の入力値を確かめる場合'],
+  'calculator/ideal-weight':['体重計','体重の変化を記録する場合'],
+  'calculator/pace':['ランニングウォッチ','走った距離と時間を記録してペースを確かめる場合'],
+  'calculator/electricity-cost':['ワットチェッカー','実際の消費電力を測り、計算の入力値を確かめる場合']
 };
-
-const CATEGORY_KEYWORDS={image:'外付けSSD',pdf:'スキャナー',text:'キーボード',web:'USBハブ',calculator:'電卓',developer:'キーボード'};
 const json=(data,status=200,headers={})=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'public, max-age=900, stale-while-revalidate=3600',...headers}});
-const firstImage=item=>{const a=item.mediumImageUrls||item.smallImageUrls||item.MediumImageUrls||item.SmallImageUrls||[];const x=Array.isArray(a)?a[0]:null;return typeof x==='string'?x:(x?.imageUrl||x?.ImageUrl||'')};
-const normalize=item=>({name:item.itemName||item.ItemName||'',price:Number(item.itemPrice??item.ItemPrice??0),image:firstImage(item),url:item.affiliateUrl||item.AffiliateUrl||item.itemUrl||item.ItemUrl||'',shop:item.shopName||item.ShopName||'',reviewAverage:Number(item.reviewAverage??item.ReviewAverage??0),reviewCount:Number(item.reviewCount??item.ReviewCount??0)});
-
+function safeUrl(value,affiliate=false){
+  try{const u=new URL(value);if(u.protocol!=='https:')return '';if(affiliate)return u.hostname==='hb.afl.rakuten.co.jp'?u.href:'';return /(?:^|\.)rakuten\.(?:co\.jp|ne\.jp)$/.test(u.hostname)?u.href:''}catch{return ''}
+}
+function normalize(item){
+  const images=item.mediumImageUrls||item.smallImageUrls||item.MediumImageUrls||item.SmallImageUrls||[];
+  const first=Array.isArray(images)?images[0]:null;
+  return {name:String(item.itemName||item.ItemName||'').slice(0,500),price:Number(item.itemPrice??item.ItemPrice??0),image:safeUrl(typeof first==='string'?first:first?.imageUrl||first?.ImageUrl||''),url:safeUrl(item.affiliateUrl||item.AffiliateUrl||'',true),shop:String(item.shopName||item.ShopName||'').slice(0,150)};
+}
 export async function onRequestGet({request,env}){
+  const tool=(new URL(request.url).searchParams.get('tool')||'').replace(/^\/+|\/+$/g,'');
+  if(!/^(image|pdf|text|web|calculator|developer)\/[a-z0-9-]+$/.test(tool))return json({ok:false,error:'invalid_tool'},400,{'cache-control':'no-store'});
+  const product=TOOL_PRODUCTS[tool];
+  if(!product)return json({ok:true,tool,disabled:true,items:[]});
   if(!env.RAKUTEN_APP_ID||!env.RAKUTEN_ACCESS_KEY||!env.RAKUTEN_AFFILIATE_ID)return json({ok:false,error:'rakuten_not_configured'},503,{'cache-control':'no-store'});
-  const u=new URL(request.url),tool=(u.searchParams.get('tool')||'').replace(/^\/+|\/+$/g,''),category=tool.split('/')[0]||'',keyword=TOOL_KEYWORDS[tool]||CATEGORY_KEYWORDS[category];
-  if(!keyword)return json({ok:false,error:'unknown_tool'},400,{'cache-control':'no-store'});
-  const q=new URL(PRODUCT_API);q.searchParams.set('applicationId',env.RAKUTEN_APP_ID);q.searchParams.set('affiliateId',env.RAKUTEN_AFFILIATE_ID);q.searchParams.set('keyword',keyword);q.searchParams.set('format','json');q.searchParams.set('formatVersion','2');q.searchParams.set('hits','4');q.searchParams.set('imageFlag','1');q.searchParams.set('sort','-reviewCount');
+  const [keyword,purpose]=product,q=new URL(PRODUCT_API);
+  for(const [key,value] of Object.entries({applicationId:env.RAKUTEN_APP_ID,affiliateId:env.RAKUTEN_AFFILIATE_ID,keyword,format:'json',formatVersion:'2',hits:'4',imageFlag:'1',sort:'-reviewCount'}))q.searchParams.set(key,value);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),6000);
   try{
-    const r=await fetch(q,{headers:{accessKey:env.RAKUTEN_ACCESS_KEY,origin:SITE_ORIGIN,referer:`${SITE_ORIGIN}/`,'user-agent':'SuguTsucool/1.1'}});
-    if(!r.ok){let upstream={};try{upstream=await r.json()}catch{}return json({ok:false,error:'rakuten_upstream',status:r.status,upstreamError:upstream?.error||upstream?.Error||'',upstreamDescription:upstream?.error_description||upstream?.errorDescription||upstream?.ErrorDescription||''},502,{'cache-control':'no-store'})}
-    const data=await r.json(),raw=Array.isArray(data.items)?data.items:Array.isArray(data.Items)?data.Items:[],items=raw.map(x=>x?.Item||x?.item||x).map(normalize).filter(x=>x.name&&x.url).slice(0,4);return json({ok:true,tool,keyword,items});
-  }catch(e){return json({ok:false,error:'rakuten_fetch_failed'},502,{'cache-control':'no-store'})}
+    const r=await fetch(q,{signal:controller.signal,headers:{accessKey:env.RAKUTEN_ACCESS_KEY,origin:SITE_ORIGIN,referer:`${SITE_ORIGIN}/`,'user-agent':'SuguTsucool/1.1'}});
+    if(!r.ok)return json({ok:false,error:r.status===429?'rakuten_rate_limited':'rakuten_upstream',status:r.status},502,{'cache-control':'no-store'});
+    const data=await r.json(),raw=Array.isArray(data.items)?data.items:Array.isArray(data.Items)?data.Items:[];
+    const items=raw.map(x=>x?.Item||x?.item||x).filter(x=>x&&typeof x==='object').map(normalize).filter(x=>x.name&&x.url&&x.image&&Number.isFinite(x.price)&&x.price>0).slice(0,4);
+    return json({ok:true,tool,keyword,purpose,items});
+  }catch{return json({ok:false,error:'rakuten_fetch_failed'},502,{'cache-control':'no-store'})}
+  finally{clearTimeout(timer)}
 }

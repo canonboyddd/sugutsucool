@@ -1,3 +1,4 @@
+import { protectQaPage } from './qa-safety.mjs';
 import { chromium, devices } from 'playwright';
 import { PDFDocument } from 'pdf-lib';
 import { PNG } from 'pngjs';
@@ -28,12 +29,12 @@ const waitForUI = async page => {
   await page.waitForTimeout(500);
 };
 
-const browser = await chromium.launch({headless:true});
+const browser = await chromium.launch({headless:true,channel:process.env.QA_BROWSER_CHANNEL||undefined});
 const desktop = await browser.newContext({viewport:{width:1440,height:1000}, acceptDownloads:true, permissions:['clipboard-read','clipboard-write']});
 
 for (const p of paths) {
   const name = `smoke ${p}`;
-  const page = await desktop.newPage();
+  const page = await desktop.newPage();await protectQaPage(page);
   const pageErrors = [];
   page.on('pageerror', e => pageErrors.push(e.message));
   try {
@@ -64,7 +65,7 @@ const pdf1=path.join(tmp,'one.pdf'), pdf2=path.join(tmp,'two.pdf');
 await makePdf(pdf1,'PDF ONE'); await makePdf(pdf2,'PDF TWO');
 
 async function keyTest(name, route, fn) {
-  const page = await desktop.newPage();
+  const page = await desktop.newPage();await protectQaPage(page);
   const errs=[]; page.on('pageerror',e=>errs.push(e.message));
   try {
     const res=await page.goto(BASE+route,{waitUntil:'domcontentloaded',timeout:30000});
@@ -125,7 +126,7 @@ await keyTest('plus developer JSON to CSV','/developer/json-to-csv/',async page=
 
 const mobile = await browser.newContext({...devices['iPhone 13'], acceptDownloads:true});
 for (const p of paths) {
-  const name=`mobile ${p}`; const page=await mobile.newPage();
+  const name=`mobile ${p}`; const page=await mobile.newPage();await protectQaPage(page);
   try {
     const res=await page.goto(BASE+p,{waitUntil:'domcontentloaded',timeout:30000}); if(!res||res.status()>=400) throw new Error(`HTTP ${res?.status()}`);
     await waitForUI(page);

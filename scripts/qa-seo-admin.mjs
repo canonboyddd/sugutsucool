@@ -1,3 +1,4 @@
+import { protectQaPage } from './qa-safety.mjs';
 import fs from 'node:fs/promises';
 import { chromium } from 'playwright';
 
@@ -26,9 +27,9 @@ try{
   push('live-crawl-files',robotsOk&&sitemapOk,{robotsStatus:robotsRes.status,sitemapStatus:sitemapRes.status,urlCount:urls.length,robotsOk,sitemapOk});
 }catch(e){push('live-crawl-files',false,{error:String(e.message||e)})}
 
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,channel:process.env.QA_BROWSER_CHANNEL||undefined});
 async function checkPage(path,type){
-  const page=await browser.newPage({viewportSize:{width:390,height:844}});const errors=[];let priorityStatus=null;
+  const page=await browser.newPage({viewport:{width:390,height:844}});await protectQaPage(page);const errors=[];let priorityStatus=null;
   page.on('pageerror',e=>errors.push(String(e.message||e)));
   page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
   page.on('response',r=>{if(r.url().includes('/data/seo-priority.json'))priorityStatus=r.status()});

@@ -1,3 +1,4 @@
+import { protectQaPage } from './qa-safety.mjs';
 import { chromium, devices } from 'playwright';
 import { EXPANSION_TOOLS } from './expansion-tools-data.mjs';
 import fs from 'node:fs/promises';
@@ -5,11 +6,11 @@ import fs from 'node:fs/promises';
 const BASE=process.env.QA_BASE_URL||'https://sugutsucool.pages.dev';
 const paths=EXPANSION_TOOLS.map(t=>`/${t[3]}/`);
 const failures=[];
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,channel:process.env.QA_BROWSER_CHANNEL||undefined});
 
 async function checkContext(context,label){
   for(const p of paths){
-    const page=await context.newPage();
+    const page=await context.newPage();await protectQaPage(page);
     const errs=[];page.on('pageerror',e=>errs.push(e.message));
     try{
       const res=await page.goto(BASE+p,{waitUntil:'domcontentloaded',timeout:30000});

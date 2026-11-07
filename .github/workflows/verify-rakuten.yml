@@ -24,7 +24,7 @@ jobs:
           set -uo pipefail
           mkdir -p qa-results
           status="$(curl --silent --show-error --retry 4 --retry-delay 5 --output qa-results/rakuten-response.json --write-out '%{http_code}' \
-            'https://sugutsucool.pages.dev/api/rakuten?tool=image%2Fcompress' || true)"
+            'https://sugutsucool.pages.dev/api/rakuten?tool=calculator%2Felectricity-cost' || true)"
           printf '%s\n' "$status" > qa-results/rakuten-status.txt
           echo "HTTP $status"
           cat qa-results/rakuten-response.json || true
@@ -46,8 +46,17 @@ jobs:
           items=d.get('items') or []
           assert len(items)>=1, d
           assert all(x.get('name') and x.get('url') for x in items), items
-          assert all('rakuten' in x.get('url','').lower() or 'r10.to' in x.get('url','').lower() for x in items), items
+          from urllib.parse import urlparse
+          assert all(urlparse(x.get('url','')).hostname == 'hb.afl.rakuten.co.jp' and x.get('image') and x.get('price',0)>0 for x in items), items
           print('Rakuten API OK:',len(items),'items')
+          PY
+      - name: Check irrelevant tool advertisements are suppressed
+        run: |
+          curl --fail --silent --show-error 'https://sugutsucool.pages.dev/api/rakuten?tool=image%2Fcompress' > qa-results/rakuten-disabled.json
+          python - <<'PY'
+          import json
+          d=json.load(open('qa-results/rakuten-disabled.json',encoding='utf-8'))
+          assert d.get('ok') is True and d.get('disabled') is True and d.get('items') == [], d
           PY
       - name: Check affiliate client is published
         run: |
