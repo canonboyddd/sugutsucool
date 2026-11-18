@@ -1,0 +1,54 @@
+{
+  "site": "sugutsucool",
+  "base": "https://sugutsucool.pages.dev",
+  "checkedAt": "2026-11-18T13:38:35.023Z",
+  "finishedAt": "2026-11-18T13:38:45.841Z",
+  "method": "HTTP GET without JavaScript; QA/bot user agent; redirects followed manually; only <head> read",
+  "concurrency": 6,
+  "robots": {
+    "status": 200,
+    "text": "User-agent: *\nAllow: /\nDisallow: /admin-analytics/\nDisallow: /admin-seo/\nSitemap: https://sugutsucool.pages.dev/sitemap.xml\n",
+    "declaredSitemaps": [
+      "https://sugutsucool.pages.dev/sitemap.xml"
+    ]
+  },
+  "sitemaps": [
+    {
+      "url": "https://sugutsucool.pages.dev/sitemap.xml",
+      "status": 200,
+      "type": "urlset",
+      "entries": 260
+    }
+  ],
+  "sitemapUrlTotal": 260,
+  "uniqueUrls": 260,
+  "duplicateSitemapEntries": 0,
+  "statusCounts": {
+    "200": 260
+  },
+  "counts": {
+    "non200": 0,
+    "redirected": 0,
+    "noindex": 0,
+    "canonicalMissing": 0,
+    "canonicalMultiple": 0,
+    "canonicalMismatch": 0,
+    "errors": 0,
+    "offHost": 0,
+    "titleMissing": 0
+  },
+  "duplicateTitleGroups": 0,
+  "unknownUrlStatus": 404,
+  "problems": {
+    "non200": [],
+    "redirected": [],
+    "noindex": [],
+    "canonicalMissing": [],
+    "canonicalMultiple": [],
+    "canonicalMismatch": [],
+    "errors": [],
+    "offHost": [],
+    "titleMissing": []
+  },
+  "duplicateTitlesSample": []
+}
