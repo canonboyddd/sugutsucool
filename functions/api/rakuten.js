@@ -7,9 +7,11 @@ const TOOL_PRODUCTS={
   'image/to-pdf':['ドキュメントスキャナー','紙の写真や書類を読み込んでからPDFにまとめる場合'],
   'pdf/merge':['ドキュメントスキャナー','紙の書類を読み込んでからPDFを結合する場合'],
   'pdf/reorder':['ドキュメントスキャナー','紙の書類を読み込んでからページを整理する場合'],
-  'calculator/unit-length':['メジャー','実物の長さを測り、換算する入力値を確かめる場合'],
+  // "メジャー" alone matched curtains, coffee and baseballs in the review-count ranking (2026-11-19).
+  'calculator/unit-length':['コンベックス メジャー','実物の長さを測り、換算する入力値を確かめる場合'],
   'calculator/unit-weight':['デジタルスケール','実物の重さを測り、換算する入力値を確かめる場合'],
-  'calculator/temperature':['温度計','実際の温度を測り、換算する入力値を確かめる場合'],
+  // "温度計" alone also returned cameras and cookware that merely include a thermometer.
+  'calculator/temperature':['温湿度計 デジタル','実際の温度を測り、換算する入力値を確かめる場合'],
   'calculator/bmi':['体重計','体重を測り、計算の入力値を確かめる場合'],
   'calculator/ideal-weight':['体重計','体重の変化を記録する場合'],
   'calculator/pace':['ランニングウォッチ','走った距離と時間を記録してペースを確かめる場合'],

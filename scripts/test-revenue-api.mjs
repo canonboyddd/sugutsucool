@@ -23,3 +23,8 @@ test('Rate limits, malformed payloads and network failures fail closed without u
  const original=globalThis.fetch;
  try{for(const mock of [()=>Response.json({error:'private-debug-data'},{status:429}),()=>new Response('invalid JSON'),()=>Promise.reject(new Error('private-debug-data'))]){globalThis.fetch=mock;const r=await onRequestGet({request:request('calculator/electricity-cost'),env});assert.equal(r.status,502);assert.doesNotMatch(await r.text(),/private-debug-data/)}}finally{globalThis.fetch=original}
 });
+test('Measuring-tool searches use keywords that only match the tool itself',async()=>{
+ const original=globalThis.fetch;const seen={};
+ globalThis.fetch=async url=>{const u=new URL(url);seen.keyword=u.searchParams.get('keyword');return Response.json({Items:[{Item:product}]})};
+ try{for(const [tool,keyword] of [['calculator/unit-length','コンベックス メジャー'],['calculator/temperature','温湿度計 デジタル']]){const r=await onRequestGet({request:request(tool),env});assert.equal(r.status,200);assert.equal(seen.keyword,keyword);assert.equal((await r.json()).keyword,keyword)}}finally{globalThis.fetch=original}
+});
