@@ -7,7 +7,7 @@
 <title>SuguTsucool｜GSC CSV → 重点30</title>
 <link rel="stylesheet" href="/assets/styles.css">
 <style>
-body{background:#f8fafc}.wrap{max-width:980px;margin:auto;padding:28px 18px 70px}.panel{background:#fff;border:1px solid #dbe4ef;border-radius:18px;padding:18px;margin:14px 0}.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.drop{border:2px dashed #bfdbfe;border-radius:14px;padding:18px}.drop input{display:block;margin-top:10px}.btn{border:0;border-radius:10px;background:#2563eb;color:#fff;font-weight:800;padding:11px 15px;cursor:pointer}.btn.secondary{background:#e8eef8;color:#19345d}.note{color:#64748b;font-size:.82rem}.ok{color:#047857;font-weight:800}.warn{color:#b45309;font-weight:800}table{width:100%;border-collapse:collapse;font-size:.82rem}th,td{text-align:left;padding:9px;border-bottom:1px solid #edf2f7}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;word-break:break-all}.actions{display:flex;gap:10px;flex-wrap:wrap}@media(max-width:720px){.row{grid-template-columns:1fr}}
+body{background:#f8fafc}.wrap{max-width:980px;margin:auto;padding:28px 18px 70px}.panel{background:#fff;border:1px solid #dbe4ef;border-radius:18px;padding:18px;margin:14px 0}.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.drop{border:2px dashed #bfdbfe;border-radius:14px;padding:18px}.drop input{display:block;margin-top:10px;width:100%;min-width:0;max-width:100%}.panel,.drop{min-width:0;overflow-wrap:anywhere}.table-scroll{max-width:100%;overflow-x:auto}.table-scroll table{min-width:420px}.btn{border:0;border-radius:10px;background:#2563eb;color:#fff;font-weight:800;padding:11px 15px;cursor:pointer}.btn.secondary{background:#e8eef8;color:#19345d}.note{color:#64748b;font-size:.82rem}.ok{color:#047857;font-weight:800}.warn{color:#b45309;font-weight:800}table{width:100%;border-collapse:collapse;font-size:.82rem}th,td{text-align:left;padding:9px;border-bottom:1px solid #edf2f7}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;word-break:break-all}.actions{display:flex;gap:10px;flex-wrap:wrap}@media(max-width:720px){.row{grid-template-columns:1fr}}
 </style>
 </head>
 <body><main class="wrap">
@@ -20,7 +20,7 @@ body{background:#f8fafc}.wrap{max-width:980px;margin:auto;padding:28px 18px 70px
 </div>
 <section class="panel"><div class="actions"><button id="build" class="btn">重点30を再計算</button><button id="download" class="btn secondary" disabled>seo-priority.json を保存</button></div><p id="status" class="note">2ファイルを選択してください。</p></section>
 <section class="panel"><h2>安全判定</h2><div id="safety" class="note">未計算</div></section>
-<section class="panel"><h2>反映候補</h2><table><thead><tr><th>#</th><th>パス</th><th>Score</th><th>表示</th><th>Click</th><th>順位</th></tr></thead><tbody id="result"><tr><td colspan="6">未計算</td></tr></tbody></table></section>
+<section class="panel"><h2>反映候補</h2><div class="table-scroll" tabindex="0" role="region" aria-label="反映候補一覧"><table><thead><tr><th>#</th><th>パス</th><th>Score</th><th>表示</th><th>Click</th><th>順位</th></tr></thead><tbody id="result"><tr><td colspan="6">未計算</td></tr></tbody></table></div></section>
 </main>
 <script>
 (()=>{const $=s=>document.querySelector(s);let output=null;
